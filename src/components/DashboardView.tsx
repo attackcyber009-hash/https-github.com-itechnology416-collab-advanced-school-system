@@ -27,6 +27,9 @@ import {
   PieChart as PieIcon,
   Layers,
   Clock,
+  Bus,
+  Smartphone,
+  Fingerprint,
 } from 'lucide-react';
 import {
   BarChart,
@@ -290,8 +293,30 @@ export default function DashboardView({
         </div>
       </div>
 
-      {/* Quick Action Ribbon (5 Core Phase 2 Administrative Shortcuts) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+      {/* Active School Notice Banner (if any active notices exist) */}
+      {notices && notices.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-2.5 px-3 flex items-center justify-between gap-3 text-xs shadow-2xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="px-2 py-0.5 rounded bg-amber-500 text-white font-bold text-[10px] uppercase shrink-0">
+              Notice
+            </span>
+            <span className="font-bold text-slate-800 shrink-0">{notices[0].title}:</span>
+            <span className="text-slate-600 truncate">{notices[0].content}</span>
+            <span className="text-[10px] text-slate-400 shrink-0 hidden sm:inline">{notices[0].date}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('school_notice_board')}
+            className="text-amber-800 hover:text-amber-900 font-bold hover:underline shrink-0 text-[11px] flex items-center gap-1 cursor-pointer"
+          >
+            <span>Notice Board ({notices.length})</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
+      {/* Quick Action Ribbon (Core Administrative Shortcuts) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
         <button
           type="button"
           onClick={onAdmitClick}
@@ -316,7 +341,7 @@ export default function DashboardView({
           </div>
           <div>
             <div className="text-xs font-bold text-slate-800">Notices</div>
-            <div className="text-[10px] text-slate-500">School announcements</div>
+            <div className="text-[10px] text-slate-500">Announcements</div>
           </div>
         </button>
 
@@ -345,6 +370,76 @@ export default function DashboardView({
           <div>
             <div className="text-xs font-bold text-slate-800">Bulk Fees</div>
             <div className="text-[10px] text-slate-500">Process payments</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('digital_payment_gateway')}
+          className="p-2.5 bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            <CreditCard className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">1Link Digital Pay</div>
+            <div className="text-[10px] text-slate-500">Challan checkout</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('biometric_rfid_sync')}
+          className="p-2.5 bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            <Fingerprint className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">Biometric Sync</div>
+            <div className="text-[10px] text-slate-500">RFID turnstiles</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('ai_exam_grader')}
+          className="p-2.5 bg-white hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">AI Exam Grader</div>
+            <div className="text-[10px] text-slate-500">OCR &amp; FBISE/O-Level</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('live_bus_gps_tracker')}
+          className="p-2.5 bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            <Bus className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">Bus GPS Tracker</div>
+            <div className="text-[10px] text-slate-500">Fleet telemetry</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('mobile_push_engine')}
+          className="p-2.5 bg-white hover:bg-rose-50/50 border border-slate-200 hover:border-rose-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            <Smartphone className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">Mobile Push</div>
+            <div className="text-[10px] text-slate-500">Lock-screen alerts</div>
           </div>
         </button>
 
@@ -379,14 +474,14 @@ export default function DashboardView({
         <button
           type="button"
           onClick={() => setShowDefaultersModal(true)}
-          className="p-2.5 bg-white hover:bg-red-50/50 border border-slate-200 hover:border-red-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+          className="p-2.5 bg-white hover:bg-rose-50/50 border border-slate-200 hover:border-rose-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
         >
-          <div className="w-8 h-8 rounded-md bg-red-100 text-red-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+          <div className="w-8 h-8 rounded-md bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
             <AlertTriangle className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-800">Fee Defaulters</div>
-            <div className="text-[10px] text-red-600 font-semibold">{unpaidVouchers.length} Accounts Pending</div>
+            <div className="text-xs font-bold text-slate-800">Defaulter Popup</div>
+            <div className="text-[10px] text-rose-600 font-semibold">{unpaidVouchers.length} Unpaid</div>
           </div>
         </button>
 
@@ -400,21 +495,63 @@ export default function DashboardView({
           </div>
           <div>
             <div className="text-xs font-bold text-slate-800">Daily Attendance</div>
-            <div className="text-[10px] text-slate-500">Roll call &amp; SMS notifications</div>
+            <div className="text-[10px] text-slate-500">Roll call &amp; SMS</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={() => onNavigate('expenses')}
-          className="p-2.5 bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group col-span-2 sm:col-span-1"
+          className="p-2.5 bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
         >
           <div className="w-8 h-8 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
             <DollarSign className="w-4 h-4" />
           </div>
           <div>
             <div className="text-xs font-bold text-slate-800">Record Expense</div>
-            <div className="text-[10px] text-slate-500">Log campus utility / supply</div>
+            <div className="text-[10px] text-slate-500">Log campus cost</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('family_fee_calculator')}
+          className="p-2.5 bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            👨‍👩‍👧
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">Family Calc</div>
+            <div className="text-[10px] text-slate-500">Sibling concessions</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('manage_campuses')}
+          className="p-2.5 bg-white hover:bg-teal-50/50 border border-slate-200 hover:border-teal-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            <Building className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">Manage Branches</div>
+            <div className="text-[10px] text-slate-500">{campuses.length} Campuses</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onNavigate('super_admin_control_center')}
+          className="p-2.5 bg-white hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 rounded-lg shadow-2xs flex items-center gap-2.5 transition text-left cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs group-hover:scale-105 transition">
+            ⚡
+          </div>
+          <div>
+            <div className="text-xs font-bold text-slate-800">Control Center</div>
+            <div className="text-[10px] text-slate-500">Super admin tools</div>
           </div>
         </button>
       </div>

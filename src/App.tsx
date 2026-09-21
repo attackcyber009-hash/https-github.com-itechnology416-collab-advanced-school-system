@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from './lib/firebase';
 import {
   UserRole,
   ActiveNavTab,
@@ -225,6 +227,11 @@ const INITIAL_EMAIL_RECORDS: EmailRecord[] = [
   }
 ];
 
+import SuperAdminDashboard from './components/dashboards/SuperAdminDashboard';
+import TeacherDashboard, { TeacherSectionTab } from './components/dashboards/TeacherDashboard';
+import AccountantDashboard from './components/dashboards/AccountantDashboard';
+import ParentDashboard from './components/dashboards/ParentDashboard';
+import StudentDashboard from './components/dashboards/StudentDashboard';
 import LoginScreen from './components/LoginScreen';
 import TopHeader from './components/TopHeader';
 import SidebarNavigation from './components/SidebarNavigation';
@@ -239,6 +246,7 @@ import ExamManagementView from './components/ExamManagementView';
 import TestManagementView from './components/TestManagementView';
 import TeacherPortalView from './components/TeacherPortalView';
 import ParentPortalView from './components/ParentPortalView';
+import StudentPortalView from './components/StudentPortalView';
 import AcademicOperationsView from './components/AcademicOperationsView';
 import Phase1AdministrationView from './components/Phase1AdministrationView';
 import PrintModal from './components/PrintModal';
@@ -296,13 +304,36 @@ import {
   ManageBiometricDevicesView,
   WebsiteManagementView,
 } from './components/DashboardExtensionsSuite';
+import SuperAdminControlCenterView from './components/SuperAdminControlCenterView';
+import AccessDeniedView from './components/AccessDeniedView';
+import DigitalPaymentGatewayView from './components/DigitalPaymentGatewayView';
+import BiometricRfidSyncView from './components/BiometricRfidSyncView';
+import AIAssessmentGradingEngineView from './components/AIAssessmentGradingEngineView';
+import LiveBusGpsTrackerView from './components/LiveBusGpsTrackerView';
+import MobilePushNotificationsEngineView from './components/MobilePushNotificationsEngineView';
+import PublicWebsiteView from './components/PublicWebsiteView';
+import { authService } from './services/authService';
+import { isTabAllowedForRole, getDefaultTabForRole } from './services/rbacService';
 
 export default function App() {
   // Authentication & Session State
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [viewMode, setViewMode] = useState<'public' | 'login' | 'app'>('public');
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>('super_admin');
   const [selectedCampus, setSelectedCampus] = useState('Main Campus (Model Town)');
   const [activeTab, setActiveTab] = useState<ActiveNavTab>('dashboard');
+  const [teacherSectionTab, setTeacherSectionTab] = useState<TeacherSectionTab>('overview');
+
+  // Verify Active Session on Mount
+  useEffect(() => {
+    const session = authService.getActiveSession();
+    if (session) {
+      setIsLoggedIn(true);
+      setCurrentUserRole(session.user.role);
+      setActiveTab(getDefaultTabForRole(session.user.role));
+      setViewMode('app');
+    }
+  }, []);
 
   // Collapsible Sidebar & Mobile Drawer State with localStorage persistence
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
@@ -532,6 +563,22 @@ export default function App() {
 
   // Application Data States
   const [students, setStudents] = useState<Student[]>(INITIAL_STUDENTS);
+  
+  useEffect(() => {
+    const unsub = onSnapshot(
+      collection(db, 'students'),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          setStudents(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Student)));
+        }
+      },
+      (error) => {
+        console.warn('Firestore students snapshot sync warning:', error);
+      }
+    );
+    return unsub;
+  }, []);
+  
   const [staff, setStaff] = useState(INITIAL_STAFF);
   const [vouchers, setVouchers] = useState<FeeVoucher[]>(INITIAL_VOUCHERS);
   const [classes, setClasses] = useState<ClassInfo[]>(INITIAL_CLASSES);
@@ -622,21 +669,26 @@ export default function App() {
     data: null,
   });
 
-  // Current logged in user object
-  const currentUser = INITIAL_USERS.find((u) => u.role === currentUserRole) || INITIAL_USERS[0];
+  // Current logged in user object derived from active auth session
+  const activeSession = authService.getActiveSession();
+  const currentUser = activeSession
+    ? activeSession.userProfile
+    : INITIAL_USERS.find((u) => u.role === currentUserRole) || INITIAL_USERS[0];
 
   // Actions
-  const handleLogin = (role: UserRole) => {
-    setCurrentUserRole(role);
+  const handleLoginSuccess = (role: UserRole, email: string) => {
+    const session = authService.getActiveSession();
+    const effectiveRole = session ? session.user.role : role;
+    setCurrentUserRole(effectiveRole);
     setIsLoggedIn(true);
-    if (role === 'teacher') setActiveTab('teacher_portal');
-    else if (role === 'parent') setActiveTab('parent_portal');
-    else if (role === 'student') setActiveTab('student_portal');
-    else setActiveTab('dashboard');
+    setActiveTab(getDefaultTabForRole(effectiveRole));
+    setViewMode('app');
   };
 
   const handleLogout = () => {
+    authService.logout();
     setIsLoggedIn(false);
+    setViewMode('public');
   };
 
   const handleAddCampus = (campus: Omit<CampusBranch, 'id' | 'studentCount' | 'staffCount'>) => {
@@ -796,12 +848,20 @@ export default function App() {
     }
   };
 
-  // If user is logged out, render login screen
+  // If user is logged out, render public website or login screen
   if (!isLoggedIn) {
+    if (viewMode === 'login') {
+      return (
+        <LoginScreen
+          onLoginSuccess={handleLoginSuccess}
+          onReturnToPublicSite={() => setViewMode('public')}
+        />
+      );
+    }
+
     return (
-      <LoginScreen
-        onLogin={handleLogin}
-        onRequestParentAccount={() => alert('Parent portal registration request dispatched to campus registrar.')}
+      <PublicWebsiteView
+        onOpenLogin={() => setViewMode('login')}
       />
     );
   }
@@ -819,8 +879,7 @@ export default function App() {
         onSearchStudent={handleSearchStudent}
         onRoleSwitch={(role: UserRole) => {
           setCurrentUserRole(role);
-          if (role === 'teacher') setActiveTab('teacher_portal');
-          else if (role === 'parent') setActiveTab('parent_portal');
+          setActiveTab(getDefaultTabForRole(role));
         }}
         onLogout={handleLogout}
         onQuickAction={(action) => {
@@ -836,6 +895,7 @@ export default function App() {
 
       {/* 2. Rapid Quick Action Ribbon */}
       <QuickActionRibbon
+        userRole={currentUserRole}
         onSelectTab={setActiveTab}
         onQuickAdmissionModal={() => setActiveTab('admissions')}
         onRefreshData={() => alert('System data synchronized with campus server.')}
@@ -845,6 +905,7 @@ export default function App() {
       <div className="flex-1 flex min-h-0 overflow-hidden relative w-full">
         {/* Stationary / Collapsible Navigation Sidebar & Mobile Drawer */}
         <SidebarNavigation
+          currentUserRole={currentUserRole}
           activeTab={activeTab}
           onSelectTab={setActiveTab}
           onSelectDiaryAction={setDiaryAction}
@@ -866,6 +927,10 @@ export default function App() {
           onSelectFeeAction={handleSelectFeeAction}
           onSelectExamAction={handleSelectExamAction}
           onSelectTestAction={handleSelectTestAction}
+          onSelectTeacherDashboardAction={(action) => {
+            setTeacherSectionTab(action);
+            setActiveTab('teacher_portal');
+          }}
           complaintsCount={unreadComplaints}
           unpaidFeesCount={unpaidCount}
           isCollapsed={isCollapsed}
@@ -881,24 +946,100 @@ export default function App() {
           id="main-stage-viewport"
           className="flex-1 h-full overflow-y-auto p-3 sm:p-5 max-w-[1600px] w-full mx-auto custom-scrollbar"
         >
-          {/* View Tab 1: Executive Dashboard (Phase 2 Visual Analytics & Financial Recovery) */}
-          {activeTab === 'dashboard' && (
-            <DashboardView
-              students={students}
-              staff={staff}
-              vouchers={vouchers}
-              classes={classes}
-              expenses={expenses}
-              campuses={campuses}
-              selectedCampus={selectedCampus}
-              onSelectCampus={setSelectedCampus}
-              sessions={sessions}
-              notices={notices}
-              onNavigate={setActiveTab}
-              onAdmitClick={() => setActiveTab('admissions')}
-              onPrintVoucher={(v) => setPrintModalConfig({ isOpen: true, type: 'fee_voucher', data: v })}
-              onPrintIdCard={(std) => setPrintModalConfig({ isOpen: true, type: 'id_card', data: std })}
+          {/* Strict Role Guard (RBAC Layer) */}
+          {!isTabAllowedForRole(currentUserRole, activeTab) ? (
+            <AccessDeniedView
+              userRole={currentUserRole}
+              attemptedTab={activeTab}
+              onNavigateHome={setActiveTab}
             />
+          ) : (
+            <>
+              {/* View Tab 1: Role-Based Dashboard */}
+              {activeTab === 'dashboard' && (
+            <>
+              {(currentUserRole === 'super_admin' || currentUserRole === 'campus_admin') && (
+                <SuperAdminDashboard
+                  students={students}
+                  staff={staff}
+                  vouchers={vouchers}
+                  classes={classes}
+                  expenses={expenses}
+                  campuses={campuses}
+                  selectedCampus={selectedCampus}
+                  onSelectCampus={setSelectedCampus}
+                  sessions={sessions}
+                  notices={notices}
+                  onNavigate={setActiveTab}
+                  onAdmitClick={() => setActiveTab('admissions')}
+                  onPrintVoucher={(v) => setPrintModalConfig({ isOpen: true, type: 'fee_voucher', data: v })}
+                  onPrintIdCard={(std) => setPrintModalConfig({ isOpen: true, type: 'id_card', data: std })}
+                />
+              )}
+              {currentUserRole === 'accountant' && (
+                <AccountantDashboard
+                  vouchers={vouchers}
+                  expenses={expenses}
+                  students={students}
+                  onNavigate={setActiveTab}
+                  onPrintVoucher={(v) => setPrintModalConfig({ isOpen: true, type: 'fee_voucher', data: v })}
+                />
+              )}
+              {currentUserRole === 'teacher' && (
+                <TeacherDashboard
+                  students={students}
+                  staff={staff}
+                  classes={classes}
+                  notices={notices}
+                  diaries={diaryList}
+                  materials={materials}
+                  timetable={timetable}
+                  marks={marks}
+                  initialTab={teacherSectionTab}
+                  onNavigate={setActiveTab}
+                  onSelectDiaryAction={setDiaryAction}
+                  onSelectAttendanceAction={setAttendanceAction}
+                  onSelectExamAction={setExamAction}
+                  onPrintMarkSheet={(data) =>
+                    setPrintModalConfig({
+                      isOpen: true,
+                      type: 'report_card',
+                      data,
+                    })
+                  }
+                  onPrintAdmitCard={(data) =>
+                    setPrintModalConfig({
+                      isOpen: true,
+                      type: 'admit_card',
+                      data,
+                    })
+                  }
+                />
+              )}
+              {currentUserRole === 'parent' && (
+                <ParentDashboard
+                  students={students}
+                  vouchers={vouchers}
+                  notices={notices}
+                  diaries={diaryList}
+                  marks={marks}
+                  onNavigate={setActiveTab}
+                  onPrintVoucher={(v) => setPrintModalConfig({ isOpen: true, type: 'fee_voucher', data: v })}
+                />
+              )}
+              {currentUserRole === 'student' && (
+                <StudentDashboard
+                  student={students[0]}
+                  students={students}
+                  diaries={diaryList}
+                  materials={materials}
+                  marks={marks}
+                  notices={notices}
+                  timetable={timetable}
+                  onNavigate={setActiveTab}
+                />
+              )}
+            </>
           )}
 
           {/* Dashboard Extensions: School Notice Board */}
@@ -918,9 +1059,19 @@ export default function App() {
             />
           )}
 
-          {/* Dashboard Extensions: Admin Role Management */}
-          {activeTab === 'admin_roles' && (
-            <AdminRoleManagementView />
+          {/* Dashboard Extensions: Admin Role Management & Super Admin Control Center */}
+          {(activeTab === 'admin_roles' || activeTab === 'super_admin_control_center') && (
+            <SuperAdminControlCenterView
+              onNavigate={setActiveTab}
+              onSimulateRole={(r) => {
+                setCurrentUserRole(r);
+                if (r === 'teacher') setActiveTab('teacher_portal');
+                else if (r === 'parent') setActiveTab('parent_portal');
+                else if (r === 'student') setActiveTab('dashboard');
+                else if (r === 'accountant') setActiveTab('dashboard');
+                else setActiveTab('dashboard');
+              }}
+            />
           )}
 
           {/* Dashboard Extensions: SMS Defaulters */}
@@ -967,9 +1118,65 @@ export default function App() {
             />
           )}
 
+          {/* Digital Payment Gateway */}
+          {activeTab === 'digital_payment_gateway' && (
+            <DigitalPaymentGatewayView
+              students={students}
+              vouchers={vouchers}
+              onUpdateVouchers={setVouchers}
+            />
+          )}
+
+          {/* Biometric & RFID Turnstile Sync */}
+          {activeTab === 'biometric_rfid_sync' && (
+            <BiometricRfidSyncView
+              students={students}
+              staff={staff}
+            />
+          )}
+
+          {/* AI Exam Grader & Question Paper Studio */}
+          {activeTab === 'ai_exam_grader' && (
+            <AIAssessmentGradingEngineView
+              students={students}
+              classes={classes}
+              marks={marks}
+            />
+          )}
+
+          {/* Live Bus GPS Tracker */}
+          {activeTab === 'live_bus_gps_tracker' && (
+            <LiveBusGpsTrackerView
+              students={students}
+            />
+          )}
+
+          {/* Mobile Push Notifications Engine */}
+          {activeTab === 'mobile_push_engine' && (
+            <MobilePushNotificationsEngineView
+              classes={classes}
+            />
+          )}
+
           {/* Settings Module */}
           {activeTab.startsWith('settings') && (
-            <SettingsView />
+            <SettingsView
+              initialSubTab={
+                activeTab === 'settings_sms'
+                  ? 'sms'
+                  : activeTab === 'settings_email'
+                  ? 'email'
+                  : activeTab === 'settings_payment'
+                  ? 'payment'
+                  : activeTab === 'settings_whatsapp'
+                  ? 'whatsapp'
+                  : activeTab === 'settings_telegram'
+                  ? 'telegram'
+                  : activeTab === 'settings_automations'
+                  ? 'automations'
+                  : 'general'
+              }
+            />
           )}
 
           {/* View Tab 2: Admissions Module */}
@@ -1214,10 +1421,31 @@ export default function App() {
             <TeacherPortalView
               students={students}
               materials={materials}
+              staff={staff}
+              classes={classes}
+              notices={notices}
+              diaries={diaryList}
+              timetable={timetable}
+              marks={marks}
+              initialTab={teacherSectionTab}
               onUploadMaterial={(mat) =>
                 setMaterials((prev) => [{ ...mat, id: `mat-${Date.now()}` }, ...prev])
               }
               onNavigateTab={setActiveTab}
+              onPrintMarkSheet={(data) =>
+                setPrintModalConfig({
+                  isOpen: true,
+                  type: 'report_card',
+                  data,
+                })
+              }
+              onPrintAdmitCard={(data) =>
+                setPrintModalConfig({
+                  isOpen: true,
+                  type: 'admit_card',
+                  data,
+                })
+              }
             />
           )}
 
@@ -1641,11 +1869,25 @@ export default function App() {
 
           {/* View Tab 14: Student Portal */}
           {activeTab === 'student_portal' && (
-            <ParentPortalView
+            <StudentPortalView
+              student={students[0]}
               students={students}
+              diaries={diaryList}
+              materials={materials}
+              marks={marks}
+              notices={notices}
+              timetable={timetable}
               vouchers={vouchers}
-              onPrintVoucher={(v) => setPrintModalConfig({ isOpen: true, type: 'fee_voucher', data: v })}
+              onPrintReportCard={(data) =>
+                setPrintModalConfig({
+                  isOpen: true,
+                  type: 'report_card',
+                  data,
+                })
+              }
             />
+          )}
+            </>
           )}
         </main>
       </div>

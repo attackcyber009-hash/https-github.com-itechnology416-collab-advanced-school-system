@@ -375,7 +375,8 @@ export default function Phase1AdministrationView({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {campuses.map((cmp) => {
-              const isSelected = selectedCampus.includes(cmp.name) || cmp.name === selectedCampus;
+              const campusName = cmp.name || cmp.campusName || 'Campus';
+              const isSelected = selectedCampus.includes(campusName) || campusName === selectedCampus;
               return (
                 <div
                   key={cmp.id}
@@ -387,10 +388,10 @@ export default function Phase1AdministrationView({
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <span className="px-2 py-0.5 bg-slate-100 text-slate-700 font-mono text-[10px] font-bold rounded">
-                          {cmp.code}
+                          {cmp.code || cmp.campusCode || 'CAMPUS'}
                         </span>
-                        <h3 className="text-sm font-bold text-slate-900 mt-1">{cmp.name}</h3>
-                        <p className="text-xs text-slate-500">{cmp.city}, Pakistan</p>
+                        <h3 className="text-sm font-bold text-slate-900 mt-1">{campusName}</h3>
+                        <p className="text-xs text-slate-500">{cmp.city || 'Punjab'}, Pakistan</p>
                       </div>
                       <span
                         className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
@@ -399,23 +400,23 @@ export default function Phase1AdministrationView({
                             : 'bg-amber-100 text-amber-800'
                         }`}
                       >
-                        {cmp.status}
+                        {cmp.status || 'Active'}
                       </span>
                     </div>
 
                     <div className="mt-3 text-xs space-y-1.5 border-t pt-2.5 text-slate-600">
                       <div>
-                        <span className="font-semibold text-slate-700">Principal:</span> {cmp.principal}
+                        <span className="font-semibold text-slate-700">Principal:</span> {cmp.principal || cmp.principalName}
                       </div>
                       <div>
-                        <span className="font-semibold text-slate-700">Phone:</span> {cmp.phone}
+                        <span className="font-semibold text-slate-700">Phone:</span> {cmp.phone || cmp.contactNo}
                       </div>
                       <div>
                         <span className="font-semibold text-slate-700">Email:</span> {cmp.email}
                       </div>
                       <div>
                         <span className="font-semibold text-slate-700">Bank Details:</span>{' '}
-                        <span className="font-mono text-[11px] text-slate-800">{cmp.bankAccount}</span>
+                        <span className="font-mono text-[11px] text-slate-800">{cmp.bankAccount || cmp.bankTitle || 'Main Branch Account'}</span>
                       </div>
                     </div>
 
@@ -426,7 +427,7 @@ export default function Phase1AdministrationView({
                       </div>
                       <div>
                         <div className="text-[10px] text-slate-500 font-medium">Staff Members</div>
-                        <div className="font-bold text-slate-800 font-mono">{cmp.staffCount}</div>
+                        <div className="font-bold text-slate-800 font-mono">{cmp.staffCount || cmp.teacherCount}</div>
                       </div>
                     </div>
                   </div>
@@ -440,7 +441,7 @@ export default function Phase1AdministrationView({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => onSelectCampus(cmp.name)}
+                        onClick={() => onSelectCampus(campusName)}
                         className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded transition"
                       >
                         Switch To This Campus

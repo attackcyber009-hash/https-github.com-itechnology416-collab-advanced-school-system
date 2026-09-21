@@ -132,16 +132,18 @@ export default function TopHeader({
 
         {/* Right: Badges & Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Plus Action */}
-          <button
-            type="button"
-            id="badge-quick-admit"
-            title="Quick Admit Student"
-            onClick={() => onQuickAction('admit')}
-            className="w-7 h-7 rounded bg-[#28a745] hover:bg-[#218838] flex items-center justify-center text-white shadow transition"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+          {/* Quick Plus Action - Only for Admins */}
+          {(currentUser.role === 'super_admin' || currentUser.role === 'campus_admin') && (
+            <button
+              type="button"
+              id="badge-quick-admit"
+              title="Quick Admit Student"
+              onClick={() => onQuickAction('admit')}
+              className="w-7 h-7 rounded bg-[#28a745] hover:bg-[#218838] flex items-center justify-center text-white shadow transition"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Complaints Badge */}
           <button
@@ -187,28 +189,41 @@ export default function TopHeader({
             </span>
           </button>
 
-          {/* User Profile Pill & Role Switcher */}
+          {/* User Profile Pill */}
           <div className="relative">
-            <button
-              type="button"
-              id="user-profile-menu-btn"
-              onClick={() => setShowRoleMenu(!showRoleMenu)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0f2444] hover:bg-[#0b1b33] border border-[#2b4c7e] text-xs transition cursor-pointer"
-            >
-              <User className="w-3.5 h-3.5 text-sky-400" />
-              <span className="font-semibold text-slate-100">{currentUser.name}</span>
-              <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-sky-600 text-white font-mono">
-                {currentUser.role.replace('_', ' ')}
-              </span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
-            </button>
+            {currentUser.role === 'super_admin' || currentUser.role === 'campus_admin' ? (
+              <button
+                type="button"
+                id="user-profile-menu-btn"
+                onClick={() => setShowRoleMenu(!showRoleMenu)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0f2444] hover:bg-[#0b1b33] border border-[#2b4c7e] text-xs transition cursor-pointer"
+              >
+                <User className="w-3.5 h-3.5 text-sky-400" />
+                <span className="font-semibold text-slate-100">{currentUser.name}</span>
+                <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-sky-600 text-white font-mono">
+                  {currentUser.role.replace('_', ' ')}
+                </span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+            ) : (
+              <div
+                id="user-profile-pill-static"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0f2444] border border-[#2b4c7e] text-xs"
+              >
+                <User className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-semibold text-slate-100">{currentUser.name}</span>
+                <span className="text-[10px] uppercase px-1.5 py-0.2 rounded bg-emerald-600 text-white font-mono">
+                  {currentUser.role.replace('_', ' ')}
+                </span>
+              </div>
+            )}
 
-            {/* Switch Role Dropdown */}
-            {showRoleMenu && (
+            {/* Switch Role Dropdown (Super Admin ONLY) */}
+            {showRoleMenu && (currentUser.role === 'super_admin' || currentUser.role === 'campus_admin') && (
               <div className="absolute right-0 mt-1 w-56 bg-white text-slate-800 rounded-md shadow-2xl border border-slate-200 py-1.5 z-50 text-xs">
                 <div className="px-3 py-1 font-semibold text-slate-400 text-[10px] uppercase flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  <span>Switch User Role &amp; Perspective</span>
+                  <span>Super Admin Perspective Simulation</span>
                 </div>
                 {(
                   [

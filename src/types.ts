@@ -164,6 +164,47 @@ export interface StudentMarkEntry {
   teacherRemarks: string;
 }
 
+// Grading Policy & Criteria Types
+export interface GradeBand {
+  id: string;
+  grade: string;
+  minPercentage: number;
+  maxPercentage: number;
+  gpaPoint: number;
+  descriptor: string;
+  remarksTemplate: string;
+}
+
+export interface AssessmentWeightageComponent {
+  id: string;
+  name: string;
+  weightPercentage: number;
+  maxMarks: number;
+  minPassingMarks: number;
+  isMandatoryToPass: boolean;
+  category: 'Written' | 'Practical' | 'Classwork' | 'Homework' | 'Attendance' | 'Behavior';
+}
+
+export interface SubjectGradingPolicy {
+  id: string;
+  termId: string;
+  termName: string;
+  academicYear: string;
+  className: string;
+  subjectName: string;
+  totalSubjectMarks: number;
+  overallPassingPercentage: number;
+  components: AssessmentWeightageComponent[];
+  gradeBands: GradeBand[];
+  attendanceThresholdPercent: number;
+  maxGraceMarks: number;
+  allowRetakeExam: boolean;
+  separatePracticalPassing: boolean;
+  notesOrInstructions?: string;
+  lastUpdated: string;
+  updatedBy: string;
+}
+
 export interface DailyDiary {
   id: string;
   date: string;
@@ -353,7 +394,7 @@ export interface SystemUser {
   email: string;
   role: UserRole;
   campusName: string;
-  status: 'Active' | 'Locked' | 'Suspended';
+  status: 'Active' | 'Locked' | 'Suspended' | 'Inactive' | 'Pending';
   lastLogin: string;
   twoFactorEnabled: boolean;
   phone: string;
@@ -463,13 +504,19 @@ export type ActiveNavTab =
   | 'school_notice_board'
   | 'manage_campuses'
   | 'admin_roles'
+  | 'super_admin_control_center'
   | 'sms_defaulters'
   | 'bulk_fee_payment'
   | 'admit_student_form'
   | 'fee_types_heads'
   | 'family_fee_calculator'
   | 'manage_biometric_devices'
-  | 'website_management';
+  | 'website_management'
+  | 'digital_payment_gateway'
+  | 'biometric_rfid_sync'
+  | 'ai_exam_grader'
+  | 'live_bus_gps_tracker'
+  | 'mobile_push_engine';
 
 // Phase 5 Financial Operations, Fee Engine, Payroll & POS Store Types
 export interface SalarySlip {

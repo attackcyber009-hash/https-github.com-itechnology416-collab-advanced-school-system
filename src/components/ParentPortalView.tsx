@@ -49,7 +49,7 @@ export default function ParentPortalView({
   }, [initialAction]);
 
   const child = students.find((s) => s.id === selectedChildId) || students[0];
-  const childVoucher = vouchers.find((v) => v.studentId === child.id) || vouchers[0];
+  const childVoucher = (child ? vouchers.find((v) => v.studentId === child.id) : undefined) || vouchers[0];
 
   const handleSendFeedback = (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,7 +175,7 @@ export default function ParentPortalView({
               </span>
               <h2 className="text-xl font-black mt-1">Parent &amp; Guardian Access Control</h2>
               <p className="text-purple-100 text-xs mt-0.5">
-                Active Student Live Preview: {child.name} ({child.className}, Sec {child.section}) • Roll No: {child.rollNo}
+                {child ? `Active Student Live Preview: ${child.name} (${child.className}, Sec ${child.section}) • Roll No: ${child.rollNo}` : 'No student record selected'}
               </p>
             </div>
 

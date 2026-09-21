@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // Students collection - Allow public read for now
+    match /students/{studentId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // Fee Vouchers collection - Allow public read for now
+    match /feeVouchers/{voucherId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

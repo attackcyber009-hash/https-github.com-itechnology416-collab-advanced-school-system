@@ -323,6 +323,7 @@ export function ManageCampusesView({
       return;
     }
     const campusObj: CampusBranch = {
+      id: `campus-${Date.now()}`,
       ...newCampus,
     };
     setCampuses((prev) => [...prev, campusObj]);
@@ -2290,18 +2291,19 @@ export function WebsiteManagementView({ initialClasses }: WebsiteManagementViewP
 
           <div className="border rounded-lg bg-white overflow-hidden divide-y">
             {initialClasses.map((cls) => {
-              const isVisible = visibleClasses[cls.className] ?? true;
+              const classNameKey = cls.className || cls.name || `class-${cls.id}`;
+              const isVisible = visibleClasses[classNameKey] ?? true;
               return (
                 <div key={cls.id} className="p-3 flex items-center justify-between hover:bg-slate-50/50 transition">
                   <div>
-                    <span className="font-bold text-slate-900 text-xs">{cls.className}</span>
+                    <span className="font-bold text-slate-900 text-xs">{cls.name || cls.className}</span>
                     <div className="text-[10px] text-slate-500 mt-0.5">Regional Branch: <strong className="text-slate-700">{cls.campusName || 'Main Executive'}</strong> • Class Teacher: {cls.classTeacher}</div>
                   </div>
                   <label className="inline-flex items-center gap-2 cursor-pointer bg-slate-50 border p-1 px-2.5 rounded hover:bg-slate-100 transition">
                     <input
                       type="checkbox"
                       checked={isVisible}
-                      onChange={() => handleToggleClassVisibility(cls.className)}
+                      onChange={() => handleToggleClassVisibility(classNameKey)}
                       className="rounded text-[#002147] focus:ring-[#002147] w-4 h-4 cursor-pointer"
                     />
                     <span className={`font-black text-[9px] uppercase ${isVisible ? 'text-emerald-800' : 'text-slate-500'}`}>

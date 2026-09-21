@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "Student record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "studentCode": { "type": "string" },
+        "className": { "type": "string" },
+        "rollNo": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "name", "studentCode"]
+    },
+    "feeVoucher": {
+      "title": "FeeVoucher",
+      "description": "Fee voucher record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "voucherNo": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "paymentStatus": { "type": "string" }
+      },
+      "required": ["id", "studentId", "voucherNo"]
+    }
+  },
+  "firestore": {
+    "students/{studentId}": {
+      "schema": "student",
+      "description": "Students collection"
+    },
+    "feeVouchers/{voucherId}": {
+      "schema": "feeVoucher",
+      "description": "Fee vouchers collection"
+    }
+  }
+}

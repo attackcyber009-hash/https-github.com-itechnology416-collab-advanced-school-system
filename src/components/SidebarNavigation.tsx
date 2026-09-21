@@ -57,10 +57,14 @@ import {
   Bell,
   MessageCircle,
   Send,
+  Check,
+  Edit3,
+  FileSpreadsheet,
 } from 'lucide-react';
-import { ActiveNavTab } from '../types';
+import { ActiveNavTab, UserRole } from '../types';
 
 interface SidebarNavigationProps {
+  currentUserRole?: UserRole;
   activeTab: ActiveNavTab;
   onSelectTab: (tab: ActiveNavTab) => void;
   onSelectDiaryAction?: (action: 'manage' | 'send_sms') => void;
@@ -147,6 +151,7 @@ interface SidebarNavigationProps {
   ) => void;
   complaintsCount: number;
   unpaidFeesCount: number;
+  onSelectTeacherDashboardAction?: (action: 'overview' | 'students' | 'attendance' | 'exams' | 'remarks' | 'grading_policy' | 'materials_diaries' | 'online_class' | 'attendance_reports' | 'notice_board') => void;
   isOpen?: boolean;
   onToggle?: () => void;
   isCollapsed?: boolean;
@@ -158,6 +163,7 @@ interface SidebarNavigationProps {
 }
 
 export default function SidebarNavigation({
+  currentUserRole,
   activeTab,
   onSelectTab,
   onSelectDiaryAction,
@@ -181,6 +187,7 @@ export default function SidebarNavigation({
   onSelectTestAction,
   complaintsCount,
   unpaidFeesCount,
+  onSelectTeacherDashboardAction,
   isOpen = true,
   onToggle,
   isCollapsed = false,
@@ -190,9 +197,19 @@ export default function SidebarNavigation({
   userName,
   userRole,
 }: SidebarNavigationProps) {
+  const effectiveRole: UserRole = currentUserRole || (
+    (userRole || '').toLowerCase().includes('teacher') ? 'teacher' :
+    (userRole || '').toLowerCase().includes('student') ? 'student' :
+    (userRole || '').toLowerCase().includes('parent') ? 'parent' :
+    (userRole || '').toLowerCase().includes('accountant') ? 'accountant' :
+    'super_admin'
+  );
+  const isSuperAdmin = effectiveRole === 'super_admin' || effectiveRole === 'campus_admin';
+
   // Expanded parent submenus
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     dashboard: false,
+    teacherDashboard: false,
     websiteManagement: false,
     admissions: true,
     students: false,
@@ -355,14 +372,473 @@ export default function SidebarNavigation({
         >
           {/* Main Section Header */}
           <div className={`px-4 pt-2 pb-0.5 flex items-center gap-1.5 ${isCollapsed ? 'lg:hidden' : 'block'}`}>
-            <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 font-extrabold text-[9px] uppercase tracking-wider rounded border border-amber-500/30">
-              SUPER ADMIN
+            <span className={`px-2 py-0.5 text-[9px] uppercase tracking-wider font-extrabold rounded border ${
+              (userRole || '').toLowerCase().includes('teacher')
+                ? 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+                : (userRole || '').toLowerCase().includes('student')
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                : (userRole || '').toLowerCase().includes('parent')
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                : (userRole || '').toLowerCase().includes('accountant')
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                : 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/30'
+            }`}>
+              {userRole ? userRole.toUpperCase() : 'SUPER ADMIN'}
             </span>
           </div>
           <div className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 ${isCollapsed ? 'lg:hidden' : 'block'}`}>
-            MAIN NAVIGATION
+            {effectiveRole === 'teacher'
+              ? 'TEACHER WORKSPACE'
+              : effectiveRole === 'student'
+              ? 'STUDENT ACADEMIC PORTAL'
+              : effectiveRole === 'parent'
+              ? 'PARENT GUARDIAN DESK'
+              : effectiveRole === 'accountant'
+              ? 'FINANCE & ACCOUNTS DESK'
+              : 'MAIN NAVIGATION'}
           </div>
 
+          {/* TEACHER ROLE MENU */}
+          {effectiveRole === 'teacher' && (
+            <>
+              <SidebarNavItem
+                id="teacher-nav-overview"
+                icon={LayoutDashboard}
+                iconColor="text-sky-400"
+                label="Teacher Dashboard"
+                active={activeTab === 'teacher_portal' || activeTab === 'dashboard'}
+                onClick={() => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('overview');
+                }}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-students"
+                icon={GraduationCap}
+                iconColor="text-emerald-400"
+                label="My Students & Classes"
+                active={activeTab === 'teacher_portal'}
+                onClick={() => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('students');
+                }}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-attendance"
+                icon={Check}
+                iconColor="text-teal-400"
+                label="Class Attendance"
+                active={activeTab === 'attendance'}
+                onClick={() => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('attendance');
+                }}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-marks"
+                icon={Edit3}
+                iconColor="text-amber-400"
+                label="Exam & Test Marks"
+                active={activeTab === 'exams' || activeTab === 'tests'}
+                onClick={() => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('exams');
+                }}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-grading"
+                icon={Award}
+                iconColor="text-indigo-400"
+                label="Grading Policy"
+                active={activeTab === 'teacher_portal'}
+                onClick={() => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('grading_policy');
+                }}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-diary"
+                icon={BookOpen}
+                iconColor="text-orange-400"
+                label="Daily Homework Diary"
+                active={activeTab === 'daily_homework_diary'}
+                onClick={() => handleTabClick('daily_homework_diary')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-materials"
+                icon={BookMarked}
+                iconColor="text-cyan-400"
+                label="Study Materials & Vault"
+                active={activeTab === 'study_materials'}
+                onClick={() => handleTabClick('study_materials')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-online-class"
+                icon={Video}
+                iconColor="text-purple-400"
+                label="Online Classes"
+                active={activeTab === 'online_classes'}
+                onClick={() => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('online_class');
+                }}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-leave"
+                icon={CalendarCheck}
+                iconColor="text-rose-400"
+                label="Leave Requests"
+                active={activeTab === 'leave_management'}
+                onClick={() => handleTabClick('leave_management')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-question-bank"
+                icon={BrainCircuit}
+                iconColor="text-purple-400"
+                label="AI Question Bank & Papers"
+                active={activeTab === 'ai_question_bank_engine'}
+                onClick={() => handleTabClick('ai_question_bank_engine')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-cpd"
+                icon={Award}
+                iconColor="text-emerald-400"
+                label="CPD Training & Skills"
+                active={activeTab === 'teacher_cpd'}
+                onClick={() => handleTabClick('teacher_cpd')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="teacher-nav-notice"
+                icon={Bell}
+                iconColor="text-amber-400"
+                label="School Notice Board"
+                active={activeTab === 'school_notice_board'}
+                onClick={() => handleTabClick('school_notice_board')}
+                isCollapsed={isCollapsed}
+              />
+            </>
+          )}
+
+          {/* STUDENT ROLE MENU */}
+          {effectiveRole === 'student' && (
+            <>
+              <SidebarNavItem
+                id="student-nav-overview"
+                icon={LayoutDashboard}
+                iconColor="text-purple-400"
+                label="Student Dashboard"
+                active={activeTab === 'student_portal' || activeTab === 'dashboard'}
+                onClick={() => handleTabClick('student_portal')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-timetable"
+                icon={Clock}
+                iconColor="text-sky-400"
+                label="Class Timetable"
+                active={activeTab === 'timetable'}
+                onClick={() => handleTabClick('timetable')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-diary"
+                icon={BookOpen}
+                iconColor="text-orange-400"
+                label="Daily Homework Diary"
+                active={activeTab === 'daily_homework_diary'}
+                onClick={() => handleTabClick('daily_homework_diary')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-materials"
+                icon={BookMarked}
+                iconColor="text-teal-400"
+                label="Study Materials Repository"
+                active={activeTab === 'study_materials'}
+                onClick={() => handleTabClick('study_materials')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-exams"
+                icon={FileText}
+                iconColor="text-amber-400"
+                label="Exams & Date Sheets"
+                active={activeTab === 'exams'}
+                onClick={() => handleTabClick('exams')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-results"
+                icon={Award}
+                iconColor="text-emerald-400"
+                label="My Marks & Results"
+                active={activeTab === 'tests'}
+                onClick={() => handleTabClick('tests')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-attendance"
+                icon={Check}
+                iconColor="text-cyan-400"
+                label="Attendance Record"
+                active={activeTab === 'attendance'}
+                onClick={() => handleTabClick('attendance')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-library"
+                icon={Library}
+                iconColor="text-indigo-400"
+                label="Library Catalog"
+                active={activeTab === 'library'}
+                onClick={() => handleTabClick('library')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-quiz"
+                icon={BrainCircuit}
+                iconColor="text-rose-400"
+                label="Practice Quizzes"
+                active={activeTab === 'quiz'}
+                onClick={() => handleTabClick('quiz')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-notices"
+                icon={Bell}
+                iconColor="text-amber-400"
+                label="School Announcements"
+                active={activeTab === 'school_notice_board'}
+                onClick={() => handleTabClick('school_notice_board')}
+                isCollapsed={isCollapsed}
+              />
+            </>
+          )}
+
+          {/* PARENT ROLE MENU */}
+          {effectiveRole === 'parent' && (
+            <>
+              <SidebarNavItem
+                id="parent-nav-overview"
+                icon={LayoutDashboard}
+                iconColor="text-emerald-400"
+                label="Parent Dashboard"
+                active={activeTab === 'parent_portal' || activeTab === 'dashboard'}
+                onClick={() => handleTabClick('parent_portal')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-children"
+                icon={GraduationCap}
+                iconColor="text-sky-400"
+                label="My Children Profiles"
+                active={activeTab === 'students'}
+                onClick={() => handleTabClick('students')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-attendance"
+                icon={Check}
+                iconColor="text-teal-400"
+                label="Attendance Tracker"
+                active={activeTab === 'attendance'}
+                onClick={() => handleTabClick('attendance')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-exams"
+                icon={Award}
+                iconColor="text-amber-400"
+                label="Academic Progress & Reports"
+                active={activeTab === 'exams' || activeTab === 'tests'}
+                onClick={() => handleTabClick('exams')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-diary"
+                icon={BookOpen}
+                iconColor="text-orange-400"
+                label="Daily Homework Diary"
+                active={activeTab === 'daily_homework_diary'}
+                onClick={() => handleTabClick('daily_homework_diary')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-fees"
+                icon={CreditCard}
+                iconColor="text-rose-400"
+                label="Fee Vouchers & Payments"
+                active={activeTab === 'fee_vouchers'}
+                onClick={() => handleTabClick('fee_vouchers')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-calc"
+                icon={DollarSign}
+                iconColor="text-emerald-400"
+                label="Family Fee Calculator"
+                active={activeTab === 'family_fee_calculator'}
+                onClick={() => handleTabClick('family_fee_calculator')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-helpdesk"
+                icon={LifeBuoy}
+                iconColor="text-indigo-400"
+                label="Parent Helpdesk & Tickets"
+                active={activeTab === 'parent_helpdesk'}
+                onClick={() => handleTabClick('parent_helpdesk')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-ptm"
+                icon={Users}
+                iconColor="text-purple-400"
+                label="Parent-Teacher Meetings"
+                active={activeTab === 'ptm_portal'}
+                onClick={() => handleTabClick('ptm_portal')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-notices"
+                icon={Bell}
+                iconColor="text-amber-400"
+                label="School Circulars"
+                active={activeTab === 'school_notice_board'}
+                onClick={() => handleTabClick('school_notice_board')}
+                isCollapsed={isCollapsed}
+              />
+            </>
+          )}
+
+          {/* ACCOUNTANT ROLE MENU */}
+          {effectiveRole === 'accountant' && (
+            <>
+              <SidebarNavItem
+                id="accountant-nav-overview"
+                icon={LayoutDashboard}
+                iconColor="text-amber-400"
+                label="Finance Dashboard"
+                active={activeTab === 'dashboard'}
+                onClick={() => handleTabClick('dashboard')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-vouchers"
+                icon={CreditCard}
+                iconColor="text-sky-400"
+                label="Fee Vouchers"
+                active={activeTab === 'fee_vouchers'}
+                onClick={() => handleTabClick('fee_vouchers')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-defaulters"
+                icon={MessageSquare}
+                iconColor="text-rose-400"
+                label="SMS to Fee Defaulters"
+                active={activeTab === 'sms_defaulters'}
+                onClick={() => handleTabClick('sms_defaulters')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-bulk"
+                icon={FileSpreadsheet}
+                iconColor="text-emerald-400"
+                label="Bulk Fee Payment"
+                active={activeTab === 'bulk_fee_payment'}
+                onClick={() => handleTabClick('bulk_fee_payment')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-heads"
+                icon={DollarSign}
+                iconColor="text-teal-400"
+                label="Fee Types & Heads"
+                active={activeTab === 'fee_types_heads'}
+                onClick={() => handleTabClick('fee_types_heads')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-calc"
+                icon={DollarSign}
+                iconColor="text-amber-400"
+                label="Family Fee Calculator"
+                active={activeTab === 'family_fee_calculator'}
+                onClick={() => handleTabClick('family_fee_calculator')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-ledgers"
+                icon={FileText}
+                iconColor="text-cyan-400"
+                label="Cash Book & Ledgers"
+                active={activeTab === 'accounting'}
+                onClick={() => handleTabClick('accounting')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-expenses"
+                icon={TrendingDown}
+                iconColor="text-rose-400"
+                label="Campus Expenses"
+                active={activeTab === 'expenses'}
+                onClick={() => handleTabClick('expenses')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-salaries"
+                icon={Briefcase}
+                iconColor="text-indigo-400"
+                label="Staff Payroll & Salaries"
+                active={activeTab === 'salaries'}
+                onClick={() => handleTabClick('salaries')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-budget"
+                icon={FileSpreadsheet}
+                iconColor="text-purple-400"
+                label="Capex/Opex Budget & POs"
+                active={activeTab === 'budget_procurement'}
+                onClick={() => handleTabClick('budget_procurement')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-reports"
+                icon={Award}
+                iconColor="text-emerald-400"
+                label="Financial Reports & Statements"
+                active={activeTab === 'analytics'}
+                onClick={() => handleTabClick('analytics')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-notices"
+                icon={Bell}
+                iconColor="text-amber-400"
+                label="School Notice Board"
+                active={activeTab === 'school_notice_board'}
+                onClick={() => handleTabClick('school_notice_board')}
+                isCollapsed={isCollapsed}
+              />
+            </>
+          )}
+
+          {/* SUPER ADMIN SUITES (Strictly Only Rendered for Super Admin & Campus Admin) */}
+          {isSuperAdmin && (
+            <>
           {/* 1. Dashboard Submenu Suite */}
           <SidebarNavSubmenu
             id="nav-dashboard-suite"
@@ -380,7 +856,12 @@ export default function SidebarNavigation({
               activeTab === 'fee_types_heads' ||
               activeTab === 'family_fee_calculator' ||
               activeTab === 'manage_biometric_devices' ||
-              activeTab === 'website_management'
+              activeTab === 'website_management' ||
+              activeTab === 'digital_payment_gateway' ||
+              activeTab === 'biometric_rfid_sync' ||
+              activeTab === 'ai_exam_grader' ||
+              activeTab === 'live_bus_gps_tracker' ||
+              activeTab === 'mobile_push_engine'
             }
             isExpanded={expandedMenus.dashboard}
             onToggleExpand={() => toggleSubmenu('dashboard')}
@@ -390,6 +871,26 @@ export default function SidebarNavigation({
               {
                 label: '• Overview Dashboard',
                 onClick: () => handleTabClick('dashboard'),
+              },
+              {
+                label: '• Digital 1Link & Challan Pay',
+                onClick: () => handleTabClick('digital_payment_gateway'),
+              },
+              {
+                label: '• Biometric & Turnstile Sync',
+                onClick: () => handleTabClick('biometric_rfid_sync'),
+              },
+              {
+                label: '• AI Exam Grader & Papers',
+                onClick: () => handleTabClick('ai_exam_grader'),
+              },
+              {
+                label: '• Live Bus GPS Tracker',
+                onClick: () => handleTabClick('live_bus_gps_tracker'),
+              },
+              {
+                label: '• Mobile Push Notifications',
+                onClick: () => handleTabClick('mobile_push_engine'),
               },
               {
                 label: '• School notice board',
@@ -438,6 +939,103 @@ export default function SidebarNavigation({
               {
                 label: '• Website management',
                 onClick: () => handleTabClick('website_management'),
+              },
+            ]}
+          />
+
+          {/* TEACHER DASHBOARD SUITE */}
+          <SidebarNavSubmenu
+            id="nav-teacher-dashboard-main"
+            icon={GraduationCap}
+            iconColor="text-sky-400"
+            label="Teacher Dashboard"
+            badge="PORTAL"
+            badgeColor="bg-sky-500/20 text-sky-300 border border-sky-500/30"
+            active={activeTab === 'teacher_portal'}
+            isExpanded={expandedMenus.teacherDashboard}
+            onToggleExpand={() => toggleSubmenu('teacherDashboard')}
+            onClickParent={() => {
+              handleTabClick('teacher_portal');
+              if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('overview');
+            }}
+            isCollapsed={isCollapsed}
+            subItems={[
+              {
+                label: '• Dashboard Overview',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('overview');
+                },
+              },
+              {
+                label: '• Student list',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('students');
+                },
+              },
+              {
+                label: '• Manage attendance',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('attendance');
+                },
+              },
+              {
+                label: '• Exam/test marks entry management',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('exams');
+                },
+              },
+              {
+                label: '• Grading policy editor',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('grading_policy');
+                },
+              },
+              {
+                label: '• Exam/test remarks entry management',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('remarks');
+                },
+              },
+              {
+                label: '• Study materials - lectures',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('materials_diaries');
+                },
+              },
+              {
+                label: '• Daily diaries',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('materials_diaries');
+                },
+              },
+              {
+                label: '• Online class',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('online_class');
+                },
+              },
+              {
+                label: '• Attendance reports',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('attendance_reports');
+                },
+              },
+              {
+                label: '• School notice board',
+                onClick: () => {
+                  handleTabClick('teacher_portal');
+                  if (onSelectTeacherDashboardAction) onSelectTeacherDashboardAction('notice_board');
+                },
               },
             ]}
           />
@@ -1962,6 +2560,8 @@ export default function SidebarNavigation({
               <span>Granular RBAC Matrix</span>
             </button>
           </div>
+            </>
+          )}
         </nav>
       </aside>
     </>

@@ -1,0 +1,6 @@
+{
+  "name": "The Educators - School Management System",
+  "description": "Comprehensive school and college management system with multi-role portals, admissions, student records, fee vouchers, exams, attendance, and reporting.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

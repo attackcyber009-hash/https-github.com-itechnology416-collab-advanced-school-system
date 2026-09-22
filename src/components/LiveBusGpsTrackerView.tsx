@@ -28,6 +28,7 @@ export default function LiveBusGpsTrackerView({ students = [] }: LiveBusGpsTrack
   const [selectedBusId, setSelectedBusId] = useState('BUS-01');
   const [activeTab, setActiveTab] = useState<'live_map' | 'manifest' | 'alerts' | 'drivers'>('live_map');
   const [isSimulatingMove, setIsSimulatingMove] = useState(true);
+  const [busTrackerNotice, setBusTrackerNotice] = useState<string | null>(null);
 
   // Fleet data
   const [buses, setBuses] = useState([
@@ -172,6 +173,13 @@ export default function LiveBusGpsTrackerView({ students = [] }: LiveBusGpsTrack
         </div>
       </div>
 
+      {busTrackerNotice && (
+        <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>✓ {busTrackerNotice}</span>
+          <button type="button" onClick={() => setBusTrackerNotice(null)} className="text-amber-700 hover:text-amber-950 font-bold">✕</button>
+        </div>
+      )}
+
       {/* Navigation Sub-Tabs */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 pt-2 rounded-t-xl">
         <div className="flex gap-2">
@@ -288,7 +296,10 @@ export default function LiveBusGpsTrackerView({ students = [] }: LiveBusGpsTrack
 
                 <button
                   type="button"
-                  onClick={() => alert(`Proximity notification dispatched to parents on ${activeBus.nextStop}!`)}
+                  onClick={() => {
+                    setBusTrackerNotice(`Proximity notification dispatched to parents on ${activeBus.nextStop}!`);
+                    setTimeout(() => setBusTrackerNotice(null), 4500);
+                  }}
                   className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-[10px] transition cursor-pointer"
                 >
                   Trigger Parent 500m Alert
@@ -366,7 +377,10 @@ export default function LiveBusGpsTrackerView({ students = [] }: LiveBusGpsTrack
                 </a>
                 <button
                   type="button"
-                  onClick={() => alert(`Broadcasting SOS security ping for ${activeBus.id}`)}
+                  onClick={() => {
+                    setBusTrackerNotice(`Broadcasting SOS security ping for ${activeBus.id} to Campus Admin!`);
+                    setTimeout(() => setBusTrackerNotice(null), 5000);
+                  }}
                   className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-lg transition border border-rose-200 cursor-pointer"
                 >
                   SOS Alert
@@ -406,7 +420,10 @@ export default function LiveBusGpsTrackerView({ students = [] }: LiveBusGpsTrack
             </div>
             <button
               type="button"
-              onClick={() => alert('Dispatched batch SMS to all remaining parents: Bus on route to school.')}
+              onClick={() => {
+                setBusTrackerNotice('Dispatched batch SMS to all remaining parents: Bus on route to school.');
+                setTimeout(() => setBusTrackerNotice(null), 5000);
+              }}
               className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               <Send className="w-3.5 h-3.5" />

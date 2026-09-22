@@ -191,7 +191,7 @@ export default function TopHeader({
 
           {/* User Profile Pill */}
           <div className="relative">
-            {currentUser.role === 'super_admin' || currentUser.role === 'campus_admin' ? (
+            {currentUser.role === 'super_admin' ? (
               <button
                 type="button"
                 id="user-profile-menu-btn"
@@ -219,11 +219,11 @@ export default function TopHeader({
             )}
 
             {/* Switch Role Dropdown (Super Admin ONLY) */}
-            {showRoleMenu && (currentUser.role === 'super_admin' || currentUser.role === 'campus_admin') && (
+            {showRoleMenu && currentUser.role === 'super_admin' && (
               <div className="absolute right-0 mt-1 w-56 bg-white text-slate-800 rounded-md shadow-2xl border border-slate-200 py-1.5 z-50 text-xs">
                 <div className="px-3 py-1 font-semibold text-slate-400 text-[10px] uppercase flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  <span>Super Admin Perspective Simulation</span>
+                  <span>Super Admin Perspective Preview</span>
                 </div>
                 {(
                   [

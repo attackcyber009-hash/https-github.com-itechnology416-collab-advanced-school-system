@@ -31,6 +31,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import { Student, StaffMember, StaffAttendanceRecord } from '../types';
+import { exportToCsv } from '../utils/fileUtils';
 
 interface AttendanceViewProps {
   students: Student[];
@@ -157,6 +158,54 @@ export default function AttendanceView({ students, staff, initialAction }: Atten
   const [isQrCameraActive, setIsQrCameraActive] = useState(false);
   const [qrMode, setQrMode] = useState<'scanner' | 'generator'>('scanner');
   const [selectedQrStudentId, setSelectedQrStudentId] = useState<string>('');
+  const [attendanceSavedSuccess, setAttendanceSavedSuccess] = useState<string | null>(null);
+
+  const handleSaveAttendanceSubmit = () => {
+    const classList = students.filter((s) => s.className === selectedClass);
+    const presentCount = classList.filter((s) => (studentStatus[s.id] || 'Present') === 'Present').length;
+    const absentCount = classList.filter((s) => studentStatus[s.id] === 'Absent').length;
+    const lateCount = classList.filter((s) => studentStatus[s.id] === 'Late').length;
+    const leaveCount = classList.filter((s) => studentStatus[s.id] === 'On Leave').length;
+
+    // Persist to localStorage for durability
+    const recordKey = `att_${selectedClass}_${selectedSection}_${attendanceDate}`;
+    const payload = {
+      date: attendanceDate,
+      className: selectedClass,
+      section: selectedSection,
+      savedAt: new Date().toISOString(),
+      attendance: studentStatus,
+      summary: { presentCount, absentCount, lateCount, leaveCount, total: classList.length }
+    };
+    try {
+      localStorage.setItem(recordKey, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+
+    setAttendanceSavedSuccess(
+      `Saved & Finalized at ${new Date().toLocaleTimeString()}! (${presentCount} Present, ${absentCount} Absent, ${lateCount} Late, ${leaveCount} On Leave)`
+    );
+    setTimeout(() => {
+      setAttendanceSavedSuccess(null);
+    }, 6000);
+  };
+
+  const handleExportDailyAttendance = () => {
+    const classList = students.filter((s) => s.className === selectedClass);
+    const rows = classList.map((s) => ({
+      'Roll No': s.rollNo,
+      'Student Code': s.studentCode,
+      'Student Name': s.name,
+      'Father Name': s.fatherName,
+      'Class': selectedClass,
+      'Section': selectedSection,
+      'Date': attendanceDate,
+      'Status': studentStatus[s.id] || 'Present',
+      'Emergency Contact': s.emergencyContact || s.parentPhone || 'N/A'
+    }));
+    exportToCsv(rows, `attendance_${selectedClass}_${selectedSection}_${attendanceDate}`);
+  };
   const [qrScanFeedback, setQrScanFeedback] = useState<string>('Align Student QR Code inside camera frame or enter code manually.');
 
   // Real Biometric States
@@ -835,6 +884,34 @@ export default function AttendanceView({ students, staff, initialAction }: Atten
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Bottom Roll Call Action & Submission Bar */}
+          <div className="p-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSaveAttendanceSubmit}
+                className="px-4 py-2 bg-[#002147] hover:bg-sky-900 text-white rounded font-bold transition shadow-xs flex items-center gap-2 cursor-pointer text-xs"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Save &amp; Finalize Today&apos;s Attendance ({selectedClass} - {selectedSection})</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleExportDailyAttendance}
+                className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded font-semibold transition text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Export CSV Ledger</span>
+              </button>
+            </div>
+            {attendanceSavedSuccess && (
+              <div className="p-2 px-3 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded font-bold text-xs flex items-center gap-1.5">
+                <CheckCheck className="w-4 h-4 text-emerald-600" />
+                <span>{attendanceSavedSuccess}</span>
+              </div>
+            )}
           </div>
         </div>
       )}

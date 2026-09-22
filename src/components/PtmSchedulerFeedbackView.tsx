@@ -33,6 +33,7 @@ export default function PtmSchedulerFeedbackView({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProgressFilter, setSelectedProgressFilter] = useState<string>('All');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [ptmNotice, setPtmNotice] = useState<string | null>(null);
 
   // Form State
   const [formState, setFormState] = useState({
@@ -85,11 +86,19 @@ export default function PtmSchedulerFeedbackView({
 
     setFeedbacks([newFeedback, ...feedbacks]);
     setShowAddModal(false);
-    alert(`PTM Assessment Dossier saved for ${newFeedback.studentName}!`);
+    setPtmNotice(`PTM Assessment Dossier saved for ${newFeedback.studentName}!`);
+    setTimeout(() => setPtmNotice(null), 4500);
   };
 
   return (
     <div id="ptm-scheduler-suite" className="space-y-4">
+      {ptmNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>✓ {ptmNotice}</span>
+          <button type="button" onClick={() => setPtmNotice(null)} className="text-emerald-600 hover:text-emerald-800 font-bold">✕</button>
+        </div>
+      )}
+
       {/* Banner */}
       <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-[#002147] rounded-xl p-5 text-white shadow-md flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
@@ -296,7 +305,7 @@ export default function PtmSchedulerFeedbackView({
                       if (onPrintPtmSlip) {
                         onPrintPtmSlip(item);
                       } else {
-                        alert(`Printing PTM Slip for ${item.studentName}`);
+                        window.print();
                       }
                     }}
                     className="px-2.5 py-1.5 bg-[#002147] hover:bg-[#0b3366] text-white rounded font-bold text-[11px] flex items-center gap-1 transition"

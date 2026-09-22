@@ -19,6 +19,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { Student, ClassInfo, StudentMarkEntry } from '../types';
+import { downloadFile, exportToCsv } from '../utils/fileUtils';
 
 interface AIAssessmentGradingEngineViewProps {
   students: Student[];
@@ -68,6 +69,7 @@ export default function AIAssessmentGradingEngineView({
   const [genTopic, setGenTopic] = useState('Kinematics, Dynamics & Circular Motion');
   const [genDifficulty, setGenDifficulty] = useState<'Standard' | 'Challenging' | 'Past Paper Style'>('Past Paper Style');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavedToMarksheet, setIsSavedToMarksheet] = useState(false);
   const [generatedPaper, setGeneratedPaper] = useState<any>({
     title: 'FIRST TERM SUMMATIVE EXAMINATION 2026',
     board: 'Federal Board of Intermediate and Secondary Education (FBISE)',
@@ -103,7 +105,6 @@ export default function AIAssessmentGradingEngineView({
     setTimeout(() => {
       setIsScanning(false);
       setScanCompleted(true);
-      alert('Optical sheet analyzed successfully! Detected 15/15 bubbles with 98.2% average neural confidence.');
     }, 1200);
   };
 
@@ -111,7 +112,6 @@ export default function AIAssessmentGradingEngineView({
     setIsGenerating(true);
     setTimeout(() => {
       setIsGenerating(false);
-      alert(`AI Question Paper generated successfully for ${genBoard} - ${genSubject}!`);
     }, 1500);
   };
 
@@ -295,11 +295,41 @@ export default function AIAssessmentGradingEngineView({
               </div>
               <button
                 type="button"
-                onClick={() => alert(`Saved ${correctCount}/${totalQuestions} marks to ${selectedStudent?.name}'s exam dossier!`)}
-                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                onClick={() => {
+                  if (onSaveMarks && selectedStudent) {
+                    const grade = scorePercentage >= 80 ? 'A+' : scorePercentage >= 70 ? 'A' : scorePercentage >= 60 ? 'B' : 'C';
+                    onSaveMarks({
+                      id: `mk-${Date.now()}`,
+                      examTermId: 'term-1',
+                      studentId: selectedStudent.id,
+                      studentName: selectedStudent.name,
+                      rollNo: selectedStudent.rollNo,
+                      className: selectedStudent.className,
+                      section: selectedStudent.section || 'A',
+                      subjectMarks: [
+                        {
+                          subject: selectedSubject,
+                          totalMarks: totalQuestions,
+                          obtainedMarks: correctCount,
+                          grade,
+                        },
+                      ],
+                      totalMax: totalQuestions,
+                      totalObtained: correctCount,
+                      percentage: scorePercentage,
+                      overallGrade: grade,
+                      teacherRemarks: 'Graded via Neural OCR Optical Bubble Scanner',
+                    });
+                  }
+                  setIsSavedToMarksheet(true);
+                  setTimeout(() => setIsSavedToMarksheet(false), 4000);
+                }}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                  isSavedToMarksheet ? 'bg-emerald-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Save to Student Marksheet</span>
+                <span>{isSavedToMarksheet ? '✓ Saved to Marksheet Dossier' : 'Save to Student Marksheet'}</span>
               </button>
             </div>
 
@@ -452,11 +482,17 @@ export default function AIAssessmentGradingEngineView({
                 </button>
                 <button
                   type="button"
-                  onClick={() => alert('PDF Exam Paper with Marking Scheme downloaded!')}
+                  onClick={() => {
+                    const paperText = `THE EDUCATORS SCHOOL SYSTEM\n${generatedPaper.board}\n${generatedPaper.title}\nSubject: ${generatedPaper.subject} | Grade: ${genClass}\nTime: ${generatedPaper.timeAllowed} | Max Marks: ${generatedPaper.maxMarks}\n\n=========================================\nSECTION A: MULTIPLE CHOICE QUESTIONS (MCQs)\n=========================================\n` +
+                      (generatedPaper.sectionA || []).map((q: any) => `Q${q.qNo}. ${q.text}\n   Options: ${q.options.join('  |  ')}\n   Key: ${q.answer}`).join('\n\n') +
+                      `\n\n=========================================\nSECTION B: CONSTRUCTED RESPONSE QUESTIONS\n=========================================\n` +
+                      `1. State Newton's Second Law of Motion and derive F = ma. (5 Marks)\n2. Differentiate between mass and weight with SI units. (4 Marks)\n3. Explain centripetal acceleration and give daily life examples. (4 Marks)\n\nPrepared by Faculty AI Assessment Engine - The Educators Network.`;
+                    downloadFile(paperText, `${genSubject}_${genClass}_ExamPaper.txt`, 'text/plain;charset=utf-8');
+                  }}
                   className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download PDF</span>
+                  <span>Download Paper File</span>
                 </button>
               </div>
             </div>
@@ -546,9 +582,27 @@ export default function AIAssessmentGradingEngineView({
             <h3 className="text-sm font-bold text-slate-800">Auto-Graded Examination Dossier Log</h3>
             <button
               type="button"
+              onClick={() => {
+                const rows = students.slice(0, 10).map((std, idx) => {
+                  const obt = 65 + (idx * 3) % 25;
+                  const pct = Math.round((obt / 75) * 100);
+                  return {
+                    'Student Name': std.name,
+                    'Roll No': std.rollNo || `RN-0${idx + 1}`,
+                    'Class': std.className,
+                    'Subject': 'Physics',
+                    'Obtained Marks': obt,
+                    'Total Marks': 75,
+                    'Percentage': `${pct}%`,
+                    'Grade': pct >= 80 ? 'A+' : pct >= 70 ? 'A' : 'B',
+                    'Status': 'Synced to Marksheet',
+                  };
+                });
+                exportToCsv(rows, 'exam_tabulation_sheet');
+              }}
               className="px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg text-xs font-bold cursor-pointer"
             >
-              Export Tabulation Sheet (.XLSX)
+              Export Tabulation Sheet (.CSV)
             </button>
           </div>
 

@@ -49,6 +49,7 @@ export default function HostelBoardingView({
   const [selectedBedForAllocation, setSelectedBedForAllocation] = useState<HostelRoomBed | null>(
     null
   );
+  const [hostelNotice, setHostelNotice] = useState<string | null>(null);
 
   // Allocation Form State
   const [allocationForm, setAllocationForm] = useState({
@@ -100,26 +101,26 @@ export default function HostelBoardingView({
     );
 
     setShowAllocateModal(false);
-    alert(`Bed ${selectedBedForAllocation.bedNo} in ${selectedBedForAllocation.roomNo} allocated to ${std.name}!`);
+    setHostelNotice(`Bed ${selectedBedForAllocation.bedNo} in ${selectedBedForAllocation.roomNo} allocated to ${std.name}!`);
+    setTimeout(() => setHostelNotice(null), 4500);
   };
 
   const handleVacateBed = (roomId: string) => {
-    if (confirm('Are you sure you want to de-allocate and mark this hostel bed as vacant?')) {
-      setRooms(
-        rooms.map((r) =>
-          r.id === roomId
-            ? {
-                ...r,
-                isOccupied: false,
-                studentId: undefined,
-                studentName: undefined,
-                className: undefined,
-              }
-            : r
-        )
-      );
-      alert('Bed vacated successfully and returned to hostel inventory.');
-    }
+    setRooms(
+      rooms.map((r) =>
+        r.id === roomId
+          ? {
+              ...r,
+              isOccupied: false,
+              studentId: undefined,
+              studentName: undefined,
+              className: undefined,
+            }
+          : r
+      )
+    );
+    setHostelNotice('Bed vacated successfully and returned to hostel inventory.');
+    setTimeout(() => setHostelNotice(null), 4500);
   };
 
   const handleCreateLeave = (e: React.FormEvent) => {
@@ -145,11 +146,19 @@ export default function HostelBoardingView({
 
     setLeaves([newPass, ...leaves]);
     setShowLeaveModal(false);
-    alert(`Hostel Outing Pass #${newPass.leaveCode} approved for ${newPass.studentName}`);
+    setHostelNotice(`Hostel Outing Pass #${newPass.leaveCode} approved for ${newPass.studentName}`);
+    setTimeout(() => setHostelNotice(null), 4500);
   };
 
   return (
     <div id="hostel-boarding-suite" className="space-y-4">
+      {hostelNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>✓ {hostelNotice}</span>
+          <button type="button" onClick={() => setHostelNotice(null)} className="text-emerald-600 hover:text-emerald-800 font-bold">✕</button>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#003366] via-[#104880] to-[#1c5d99] rounded-xl p-5 text-white shadow-md flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
@@ -469,7 +478,7 @@ export default function HostelBoardingView({
                           if (onPrintHostelPass) {
                             onPrintHostelPass(l);
                           } else {
-                            alert(`Printing Hostel Outing Pass #${l.leaveCode} for ${l.studentName}`);
+                            window.print();
                           }
                         }}
                         className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded font-bold text-[10px] flex items-center gap-1 ml-auto shadow-xs"

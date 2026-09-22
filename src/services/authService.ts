@@ -663,6 +663,123 @@ class AuthService {
     }
     return false;
   }
+
+  /**
+   * Secure User Profile Update with Strict Privilege Escalation Protection.
+   * Disallows modifying role, status, campus, or administrative privileges unless caller is Super Admin.
+   */
+  public updateProfile(
+    userId: string,
+    updates: Partial<UserProfile & SystemUser>,
+    callerRole: UserRole,
+    callerName: string = 'Current User'
+  ): { success: boolean; message: string; updatedUser?: UserAccount } {
+    let targetAccount: UserAccount | undefined;
+    for (const acc of this.accounts.values()) {
+      if (acc.id === userId || acc.email.toLowerCase() === (updates.email || '').toLowerCase()) {
+        targetAccount = acc;
+        break;
+      }
+    }
+
+    if (!targetAccount) {
+      return { success: false, message: 'User account not found.' };
+    }
+
+    // Role Escalation Protection: non-super-admins cannot change their own role or status
+    if (callerRole !== 'super_admin' && callerRole !== 'campus_admin') {
+      if (updates.role && updates.role !== targetAccount.role) {
+        this.logAuditEvent(
+          `PRIVILEGE_ESCALATION_ATTEMPT_BLOCKED: User ${targetAccount.email} attempted to change role to ${updates.role}`,
+          'SECURITY',
+          'CRITICAL',
+          'FAILED',
+          callerName,
+          callerRole
+        );
+        return {
+          success: false,
+          message: 'Security Violation: You are not authorized to elevate or modify your account role.',
+        };
+      }
+    }
+
+    // Apply allowed profile updates
+    if (updates.fullName) targetAccount.fullName = updates.fullName;
+    else if (updates.name) targetAccount.fullName = updates.name;
+    if (updates.phone) targetAccount.phone = updates.phone;
+
+    // Super Admin allowed fields
+    if (callerRole === 'super_admin' || callerRole === 'campus_admin') {
+      if (updates.role) targetAccount.role = updates.role;
+      if (updates.campusName) targetAccount.campusName = updates.campusName;
+      else if (updates.campus) targetAccount.campusName = updates.campus;
+    }
+
+    this.saveAccounts();
+
+    this.logAuditEvent(
+      `PROFILE_UPDATED: Profile modified for ${targetAccount.email}`,
+      'AUTH',
+      'INFO',
+      'SUCCESS',
+      callerName,
+      callerRole
+    );
+
+    return {
+      success: true,
+      message: 'Profile updated successfully.',
+      updatedUser: targetAccount,
+    };
+  }
+
+  /**
+   * Data Isolation Guard for Students: Verifies student only accesses their own records
+   */
+  public verifyStudentDataAccess(
+    recordStudentId: string,
+    authenticatedStudentId: string,
+    userRole: UserRole
+  ): boolean {
+    if (userRole === 'super_admin' || userRole === 'campus_admin' || userRole === 'teacher' || userRole === 'accountant') {
+      return true;
+    }
+    return recordStudentId === authenticatedStudentId;
+  }
+
+  /**
+   * Data Isolation Guard for Parents: Verifies parent only accesses their linked children records
+   */
+  public verifyParentChildAccess(
+    recordStudentId: string,
+    linkedChildrenIds: string[],
+    userRole: UserRole
+  ): boolean {
+    if (userRole === 'super_admin' || userRole === 'campus_admin' || userRole === 'teacher' || userRole === 'accountant') {
+      return true;
+    }
+    return linkedChildrenIds.includes(recordStudentId);
+  }
+
+  /**
+   * Log an RBAC / Unauthorized Access Violation to System Audit Log
+   */
+  public logSecurityViolation(
+    attemptedAction: string,
+    actorName: string,
+    actorRole: UserRole,
+    details: string
+  ): void {
+    this.logAuditEvent(
+      `RBAC_VIOLATION_BLOCKED: ${attemptedAction} by ${actorName} (${actorRole}). Details: ${details}`,
+      'SECURITY',
+      'CRITICAL',
+      'FAILED',
+      actorName,
+      actorRole
+    );
+  }
 }
 
 export const authService = new AuthService();

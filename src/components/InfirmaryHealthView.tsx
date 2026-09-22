@@ -47,6 +47,7 @@ export default function InfirmaryHealthView({
   const [showNewVisitModal, setShowNewVisitModal] = useState(false);
   const [showNewProfileModal, setShowNewProfileModal] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<StudentMedicalProfile | null>(null);
+  const [healthNotice, setHealthNotice] = useState<string | null>(null);
 
   // New Visit Form State
   const [visitForm, setVisitForm] = useState<{
@@ -133,11 +134,19 @@ export default function InfirmaryHealthView({
 
     setVisits([newVisit, ...visits]);
     setShowNewVisitModal(false);
-    alert(`OPD Visit Logged: ${newVisit.visitNo} for ${newVisit.patientName}`);
+    setHealthNotice(`OPD Visit Logged: ${newVisit.visitNo} for ${newVisit.patientName}`);
+    setTimeout(() => setHealthNotice(null), 4500);
   };
 
   return (
     <div id="infirmary-health-suite" className="space-y-4">
+      {healthNotice && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>✓ {healthNotice}</span>
+          <button type="button" onClick={() => setHealthNotice(null)} className="text-emerald-600 hover:text-emerald-800 font-bold">✕</button>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-xl p-5 text-white shadow-md flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
@@ -358,7 +367,7 @@ export default function InfirmaryHealthView({
                               date: v.visitDate,
                             });
                           } else {
-                            alert(`Printing Medical Slip for ${v.patientName}`);
+                            window.print();
                           }
                         }}
                         className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold text-[10px] inline-flex items-center gap-1 shadow-xs"
@@ -526,7 +535,10 @@ export default function InfirmaryHealthView({
                   <span>Contact: {p.emergencyDoctorPhone}</span>
                   <button
                     type="button"
-                    onClick={() => alert(`Emergency Protocol Sent via SMS to Class Incharge for ${p.studentName}`)}
+                    onClick={() => {
+                      setHealthNotice(`Emergency Protocol sent via SMS to Class Incharge for ${p.studentName}`);
+                      setTimeout(() => setHealthNotice(null), 4500);
+                    }}
                     className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold"
                   >
                     Send SMS Alert

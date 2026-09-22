@@ -40,6 +40,7 @@ export default function PublicWebsiteView({ onOpenLogin }: PublicWebsiteViewProp
     message: '',
   });
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
+  const [inquirySuccessMessage, setInquirySuccessMessage] = useState<string | null>(null);
 
   const handleInquirySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +49,9 @@ export default function PublicWebsiteView({ onOpenLogin }: PublicWebsiteViewProp
     setTimeout(() => {
       setInquirySubmitted(false);
       setInquiryForm({ parentName: '', phone: '', email: '', studentClass: 'Class One', message: '' });
-      alert('Admission inquiry submitted successfully! Our campus counselor will contact you shortly.');
-    }, 1200);
+      setInquirySuccessMessage('Admission inquiry submitted successfully! Our campus counselor will contact you shortly.');
+      setTimeout(() => setInquirySuccessMessage(null), 6000);
+    }, 800);
   };
 
   return (
@@ -193,6 +195,13 @@ export default function PublicWebsiteView({ onOpenLogin }: PublicWebsiteViewProp
                     </h3>
                     <p className="text-xs text-slate-500">Apply for 2026-2027 Academic Session</p>
                   </div>
+
+                  {inquirySuccessMessage && (
+                    <div className="p-3 mb-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold flex items-center justify-between shadow-xs">
+                      <span>✓ {inquirySuccessMessage}</span>
+                      <button type="button" onClick={() => setInquirySuccessMessage(null)} className="text-emerald-600 hover:text-emerald-800 font-bold">✕</button>
+                    </div>
+                  )}
 
                   <form onSubmit={handleInquirySubmit} className="space-y-3 text-xs">
                     <div>

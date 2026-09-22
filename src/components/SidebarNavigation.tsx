@@ -24,6 +24,7 @@ import {
   Building2,
   Shield,
   ShieldAlert,
+  ShieldCheck,
   Bus,
   Library,
   Home,
@@ -527,6 +528,15 @@ export default function SidebarNavigation({
                 onClick={() => handleTabClick('school_notice_board')}
                 isCollapsed={isCollapsed}
               />
+              <SidebarNavItem
+                id="teacher-nav-permissions"
+                icon={ShieldCheck}
+                iconColor="text-emerald-400"
+                label="Access & Permissions"
+                active={activeTab === 'permissions_access'}
+                onClick={() => handleTabClick('permissions_access')}
+                isCollapsed={isCollapsed}
+              />
             </>
           )}
 
@@ -543,15 +553,6 @@ export default function SidebarNavigation({
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
-                id="student-nav-timetable"
-                icon={Clock}
-                iconColor="text-sky-400"
-                label="Class Timetable"
-                active={activeTab === 'timetable'}
-                onClick={() => handleTabClick('timetable')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
                 id="student-nav-diary"
                 icon={BookOpen}
                 iconColor="text-orange-400"
@@ -564,45 +565,9 @@ export default function SidebarNavigation({
                 id="student-nav-materials"
                 icon={BookMarked}
                 iconColor="text-teal-400"
-                label="Study Materials Repository"
+                label="Study Materials Vault"
                 active={activeTab === 'study_materials'}
                 onClick={() => handleTabClick('study_materials')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="student-nav-exams"
-                icon={FileText}
-                iconColor="text-amber-400"
-                label="Exams & Date Sheets"
-                active={activeTab === 'exams'}
-                onClick={() => handleTabClick('exams')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="student-nav-results"
-                icon={Award}
-                iconColor="text-emerald-400"
-                label="My Marks & Results"
-                active={activeTab === 'tests'}
-                onClick={() => handleTabClick('tests')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="student-nav-attendance"
-                icon={Check}
-                iconColor="text-cyan-400"
-                label="Attendance Record"
-                active={activeTab === 'attendance'}
-                onClick={() => handleTabClick('attendance')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="student-nav-library"
-                icon={Library}
-                iconColor="text-indigo-400"
-                label="Library Catalog"
-                active={activeTab === 'library'}
-                onClick={() => handleTabClick('library')}
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
@@ -615,12 +580,39 @@ export default function SidebarNavigation({
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
+                id="student-nav-library"
+                icon={Library}
+                iconColor="text-indigo-400"
+                label="Library Catalog (OPAC)"
+                active={activeTab === 'library'}
+                onClick={() => handleTabClick('library')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-gps"
+                icon={Bus}
+                iconColor="text-amber-400"
+                label="Live Bus GPS Tracker"
+                active={activeTab === 'live_bus_gps_tracker'}
+                onClick={() => handleTabClick('live_bus_gps_tracker')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
                 id="student-nav-notices"
                 icon={Bell}
                 iconColor="text-amber-400"
                 label="School Announcements"
                 active={activeTab === 'school_notice_board'}
                 onClick={() => handleTabClick('school_notice_board')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="student-nav-permissions"
+                icon={ShieldCheck}
+                iconColor="text-emerald-400"
+                label="Access & Permissions"
+                active={activeTab === 'permissions_access'}
+                onClick={() => handleTabClick('permissions_access')}
                 isCollapsed={isCollapsed}
               />
             </>
@@ -633,54 +625,18 @@ export default function SidebarNavigation({
                 id="parent-nav-overview"
                 icon={LayoutDashboard}
                 iconColor="text-emerald-400"
-                label="Parent Dashboard"
+                label="Parent Dashboard & Children"
                 active={activeTab === 'parent_portal' || activeTab === 'dashboard'}
                 onClick={() => handleTabClick('parent_portal')}
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
-                id="parent-nav-children"
-                icon={GraduationCap}
-                iconColor="text-sky-400"
-                label="My Children Profiles"
-                active={activeTab === 'students'}
-                onClick={() => handleTabClick('students')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="parent-nav-attendance"
-                icon={Check}
-                iconColor="text-teal-400"
-                label="Attendance Tracker"
-                active={activeTab === 'attendance'}
-                onClick={() => handleTabClick('attendance')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="parent-nav-exams"
-                icon={Award}
-                iconColor="text-amber-400"
-                label="Academic Progress & Reports"
-                active={activeTab === 'exams' || activeTab === 'tests'}
-                onClick={() => handleTabClick('exams')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="parent-nav-diary"
-                icon={BookOpen}
-                iconColor="text-orange-400"
-                label="Daily Homework Diary"
-                active={activeTab === 'daily_homework_diary'}
-                onClick={() => handleTabClick('daily_homework_diary')}
-                isCollapsed={isCollapsed}
-              />
-              <SidebarNavItem
-                id="parent-nav-fees"
+                id="parent-nav-payment"
                 icon={CreditCard}
-                iconColor="text-rose-400"
-                label="Fee Vouchers & Payments"
-                active={activeTab === 'fee_vouchers'}
-                onClick={() => handleTabClick('fee_vouchers')}
+                iconColor="text-teal-400"
+                label="Fee Payment Gateway"
+                active={activeTab === 'digital_payment_gateway'}
+                onClick={() => handleTabClick('digital_payment_gateway')}
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
@@ -711,12 +667,30 @@ export default function SidebarNavigation({
                 isCollapsed={isCollapsed}
               />
               <SidebarNavItem
+                id="parent-nav-gps"
+                icon={Bus}
+                iconColor="text-amber-400"
+                label="Child Bus GPS Tracker"
+                active={activeTab === 'live_bus_gps_tracker'}
+                onClick={() => handleTabClick('live_bus_gps_tracker')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
                 id="parent-nav-notices"
                 icon={Bell}
                 iconColor="text-amber-400"
                 label="School Circulars"
                 active={activeTab === 'school_notice_board'}
                 onClick={() => handleTabClick('school_notice_board')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="parent-nav-permissions"
+                icon={ShieldCheck}
+                iconColor="text-emerald-400"
+                label="Access & Permissions"
+                active={activeTab === 'permissions_access'}
+                onClick={() => handleTabClick('permissions_access')}
                 isCollapsed={isCollapsed}
               />
             </>
@@ -831,6 +805,15 @@ export default function SidebarNavigation({
                 label="School Notice Board"
                 active={activeTab === 'school_notice_board'}
                 onClick={() => handleTabClick('school_notice_board')}
+                isCollapsed={isCollapsed}
+              />
+              <SidebarNavItem
+                id="accountant-nav-permissions"
+                icon={ShieldCheck}
+                iconColor="text-emerald-400"
+                label="Access & Permissions"
+                active={activeTab === 'permissions_access'}
+                onClick={() => handleTabClick('permissions_access')}
                 isCollapsed={isCollapsed}
               />
             </>
@@ -2517,7 +2500,19 @@ export default function SidebarNavigation({
             isCollapsed={isCollapsed}
           />
 
-          {/* Phase 1 Settings */}
+          {/* Phase 1 Settings & RBAC Permissions */}
+          <SidebarNavItem
+            id="nav-permissions-access"
+            icon={ShieldCheck}
+            iconColor="text-emerald-400"
+            label="My Access & Permissions"
+            badge="LIVE"
+            badgeColor="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+            active={activeTab === 'permissions_access'}
+            onClick={() => handleTabClick('permissions_access')}
+            isCollapsed={isCollapsed}
+          />
+
           <SidebarNavItem
             id="nav-settings"
             icon={Shield}

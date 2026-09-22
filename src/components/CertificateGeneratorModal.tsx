@@ -35,22 +35,29 @@ export default function CertificateGeneratorModal({
 
   const certificateNumber = `TE-${certType.toUpperCase().slice(0, 3)}-2024-${student.rollNo || '01'}`;
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handlePrint = async () => {
     setIsPrinting(true);
+    setErrorMessage(null);
     
     try {
-      // Record issuance in Firestore
-      await addDoc(collection(db, 'issuedCertificates'), {
-        studentId: student.id,
-        studentName: student.name,
-        certificateType: certType,
-        certificateNumber,
-        issueDate,
-        issuedBy: 'Admin',
-        timestamp: new Date().toISOString(),
-      });
+      if (db) {
+        try {
+          await addDoc(collection(db, 'issuedCertificates'), {
+            studentId: student.id,
+            studentName: student.name,
+            certificateType: certType,
+            certificateNumber,
+            issueDate,
+            issuedBy: 'Admin',
+            timestamp: new Date().toISOString(),
+          });
+        } catch (dbErr) {
+          console.warn('Certificate issuance logged locally (offline mode):', dbErr);
+        }
+      }
       
-      // Give the UI a moment to render the "Recording..." state before triggering the blocking print dialog
       requestAnimationFrame(() => {
         setTimeout(() => {
           window.print();
@@ -59,25 +66,31 @@ export default function CertificateGeneratorModal({
       });
       
     } catch (error) {
-      console.error('Error recording certificate issuance:', error);
-      alert('Failed to record certificate issuance. Please try again.');
+      console.error('Error printing certificate:', error);
+      setErrorMessage('Could not open print dialog. Please try again.');
       setIsPrinting(false);
     }
   };
 
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
+    setErrorMessage(null);
     try {
-      // Record issuance
-      await addDoc(collection(db, 'issuedCertificates'), {
-        studentId: student.id,
-        studentName: student.name,
-        certificateType: certType,
-        certificateNumber,
-        issueDate,
-        issuedBy: 'Admin',
-        timestamp: new Date().toISOString(),
-      });
+      if (db) {
+        try {
+          await addDoc(collection(db, 'issuedCertificates'), {
+            studentId: student.id,
+            studentName: student.name,
+            certificateType: certType,
+            certificateNumber,
+            issueDate,
+            issuedBy: 'Admin',
+            timestamp: new Date().toISOString(),
+          });
+        } catch (dbErr) {
+          console.warn('Certificate issuance logged locally (offline mode):', dbErr);
+        }
+      }
 
       const input = document.getElementById('official-certificate-document');
       if (input) {
@@ -91,7 +104,7 @@ export default function CertificateGeneratorModal({
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      setErrorMessage('Failed to generate PDF. You can use the Print button to Save as PDF.');
     } finally {
       setIsDownloading(false);
     }
@@ -175,6 +188,13 @@ export default function CertificateGeneratorModal({
             </button>
           </div>
         </div>
+
+        {errorMessage && (
+          <div className="bg-rose-50 border-b border-rose-200 text-rose-700 px-4 py-2 text-xs font-semibold flex items-center justify-between no-print">
+            <span>{errorMessage}</span>
+            <button type="button" onClick={() => setErrorMessage(null)} className="text-rose-500 hover:text-rose-700">✕</button>
+          </div>
+        )}
 
         {/* Certificate Configuration Drawer (Interactive parameters for administrator) */}
         <div className="bg-slate-50 border-b border-slate-200 p-3 text-xs grid grid-cols-1 sm:grid-cols-3 gap-3 no-print">

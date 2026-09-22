@@ -36,6 +36,8 @@ import {
   TimetablePeriod,
   FeeVoucher,
 } from '../types';
+import { downloadFile } from '../utils/fileUtils';
+import BackToDashboard from './BackToDashboard';
 
 interface StudentPortalViewProps {
   student?: Student;
@@ -103,6 +105,7 @@ export default function StudentPortalView({
   // Password change state
   const [passwordForm, setPasswordForm] = useState({ current: '', newPass: '', confirm: '' });
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [renewalsRequested, setRenewalsRequested] = useState<Record<string, boolean>>({});
 
   const studentDiaries = activeStudent
     ? diaries.filter((d) => d.className === activeStudent.className || !d.className)
@@ -384,6 +387,33 @@ export default function StudentPortalView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Subtab Back-to-Dashboard Header when in nested section */}
+      {activeSubTab !== 'overview' && (
+        <BackToDashboard
+          role="student"
+          pageTitle={
+            activeSubTab === 'classes'
+              ? 'My Classes & Subject Catalog'
+              : activeSubTab === 'timetable'
+              ? 'Weekly Timetable & Schedule'
+              : activeSubTab === 'assignments'
+              ? 'Daily Homework & Assignment Submissions'
+              : activeSubTab === 'exams'
+              ? 'Examination Results & Progress Report'
+              : activeSubTab === 'materials'
+              ? 'Digital LMS & Study Repository'
+              : activeSubTab === 'library'
+              ? 'Library Books & Circulation'
+              : activeSubTab === 'profile'
+              ? 'Student Academic Profile & Bio'
+              : 'Student Learning Workspace'
+          }
+          category="Scholar Workspace"
+          customAction={() => setActiveSubTab('overview')}
+          onNavigateDashboard={() => {}}
+        />
       )}
 
       {/* SUBTAB 2: MY CLASSES & SUBJECTS */}
@@ -758,7 +788,10 @@ export default function StudentPortalView({
 
                   <button
                     type="button"
-                    onClick={() => alert(`Downloading "${mat.title}" to device...`)}
+                    onClick={() => {
+                      const content = `THE EDUCATORS CAMPUS DIGITAL LEARNING RESOURCE\n\nTitle: ${mat.title}\nSubject: ${mat.subject}\nFaculty: ${mat.teacherName || 'Faculty'}\nUpload Date: ${mat.uploadDate || '2026-09-18'}\n\n=========================================\nSTUDY GUIDE & LESSON NOTES\n=========================================\n${mat.description || 'Supplementary reading and practice questions for campus review.'}\n\nOfficial Student Resource - The Educators Network.`;
+                      downloadFile(content, `${mat.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}.txt`, 'text/plain;charset=utf-8');
+                    }}
                     className="w-full py-1.5 bg-[#002147] hover:bg-[#003366] text-white text-xs font-bold rounded-lg shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer transition"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -815,13 +848,19 @@ export default function StudentPortalView({
                     </span>
                     {b.status === 'Borrowed' && (
                       <div>
-                        <button
-                          type="button"
-                          onClick={() => alert(`Renewal request sent to campus librarian for ${b.title}`)}
-                          className="text-[11px] text-sky-600 hover:underline font-bold"
-                        >
-                          Request Renewal
-                        </button>
+                        {renewalsRequested[b.id] ? (
+                          <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            ✓ Renewal Requested
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setRenewalsRequested((prev) => ({ ...prev, [b.id]: true }))}
+                            className="text-[11px] text-sky-600 hover:underline font-bold cursor-pointer"
+                          >
+                            Request Renewal
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

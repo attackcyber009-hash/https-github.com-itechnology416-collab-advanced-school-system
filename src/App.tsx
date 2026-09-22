@@ -312,6 +312,8 @@ import AIAssessmentGradingEngineView from './components/AIAssessmentGradingEngin
 import LiveBusGpsTrackerView from './components/LiveBusGpsTrackerView';
 import MobilePushNotificationsEngineView from './components/MobilePushNotificationsEngineView';
 import PublicWebsiteView from './components/PublicWebsiteView';
+import PermissionsAccessView from './components/PermissionsAccessView';
+import BackToDashboard from './components/BackToDashboard';
 import { authService } from './services/authService';
 import { isTabAllowedForRole, getDefaultTabForRole } from './services/rbacService';
 
@@ -840,6 +842,81 @@ export default function App() {
           : v
       )
     );
+    const auditEntry: AuditLogEntry = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      user: currentUser.name,
+      role: currentUserRole,
+      action: `FEE_PAYMENT: Received Rs. ${amount.toLocaleString()} for Voucher #${voucherId}`,
+      category: 'FINANCE',
+      severity: 'INFO',
+      status: 'SUCCESS',
+      ipAddress: '192.168.10.4',
+    };
+    setAuditLogs((prev) => [auditEntry, ...prev]);
+  };
+
+  const handleDisburseSalary = (slipId: string, method: string) => {
+    const salaryAmount = 55000;
+    const newExp: ExpenseRecord = {
+      id: `exp-sal-${Date.now()}`,
+      title: `Faculty Salary Payout (${slipId})`,
+      category: 'Staff Salaries',
+      amount: salaryAmount,
+      date: new Date().toISOString().split('T')[0],
+      paidTo: `Faculty Staff (${slipId})`,
+      paymentMode: (method === 'Cash' ? 'Cash' : 'Bank Transfer') as 'Cash' | 'Bank Transfer' | 'Cheque',
+      receiptNo: `SAL-${Date.now().toString().slice(-5)}`,
+      recipient: `Faculty Staff (${slipId})`,
+      approvedBy: currentUser.name,
+    };
+    setExpenses((prev) => [newExp, ...prev]);
+
+    const auditEntry: AuditLogEntry = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      user: currentUser.name,
+      role: currentUserRole,
+      action: `PAYROLL_DISBURSEMENT: Disbursed Rs. ${salaryAmount.toLocaleString()} via ${method} for ${slipId}`,
+      category: 'FINANCE',
+      severity: 'WARNING',
+      status: 'SUCCESS',
+      ipAddress: '192.168.10.4',
+    };
+    setAuditLogs((prev) => [auditEntry, ...prev]);
+  };
+
+  const handleUpdateStudent = (updatedStudent: Student) => {
+    setStudents((prev) => prev.map((s) => (s.id === updatedStudent.id ? updatedStudent : s)));
+    const auditEntry: AuditLogEntry = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      user: currentUser.name,
+      role: currentUserRole,
+      action: `STUDENT_PROFILE_UPDATED: ${updatedStudent.name} (${updatedStudent.studentCode})`,
+      category: 'ACADEMIC',
+      severity: 'INFO',
+      status: 'SUCCESS',
+      ipAddress: '192.168.10.4',
+    };
+    setAuditLogs((prev) => [auditEntry, ...prev]);
+  };
+
+  const handleDeleteStudent = (studentId: string) => {
+    const target = students.find((s) => s.id === studentId);
+    setStudents((prev) => prev.filter((s) => s.id !== studentId));
+    const auditEntry: AuditLogEntry = {
+      id: `audit-${Date.now()}`,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      user: currentUser.name,
+      role: currentUserRole,
+      action: `STUDENT_ARCHIVED_DELETED: ${target?.name || studentId}`,
+      category: 'ACADEMIC',
+      severity: 'WARNING',
+      status: 'SUCCESS',
+      ipAddress: '192.168.10.4',
+    };
+    setAuditLogs((prev) => [auditEntry, ...prev]);
   };
 
   const handleSearchStudent = (query: string) => {
@@ -955,6 +1032,15 @@ export default function App() {
             />
           ) : (
             <>
+              {/* Universal Role-Aware Back-To-Dashboard Navigation Control on all internal pages */}
+              {activeTab !== 'dashboard' && (
+                <BackToDashboard
+                  role={currentUserRole}
+                  currentTab={activeTab}
+                  onNavigateDashboard={setActiveTab}
+                />
+              )}
+
               {/* View Tab 1: Role-Based Dashboard */}
               {activeTab === 'dashboard' && (
             <>
@@ -970,6 +1056,7 @@ export default function App() {
                   onSelectCampus={setSelectedCampus}
                   sessions={sessions}
                   notices={notices}
+                  marks={marks}
                   onNavigate={setActiveTab}
                   onAdmitClick={() => setActiveTab('admissions')}
                   onPrintVoucher={(v) => setPrintModalConfig({ isOpen: true, type: 'fee_voucher', data: v })}
@@ -1365,9 +1452,7 @@ export default function App() {
           {(activeTab === 'salaries' || activeTab === 'staff') && (
             <PayrollManagementView
               staff={staff}
-              onDisburseSalary={(slipId, method) => {
-                // salary disburse record
-              }}
+              onDisburseSalary={handleDisburseSalary}
             />
           )}
 
@@ -1377,7 +1462,7 @@ export default function App() {
               expenses={expenses}
               onAddExpense={handleAddExpense}
               monthlyFeeCollection={vouchers.filter((v) => v.paymentStatus === 'Paid').reduce((s, v) => s + v.netPayable, 0)}
-              monthlyPayrollCost={485000}
+              monthlyPayrollCost={staff.reduce((acc, s) => acc + (s.salary || 45000), 0)}
             />
           )}
 
@@ -1658,6 +1743,13 @@ export default function App() {
                   data: record,
                 })
               }
+              onPrintLessonPlan={(plan) =>
+                setPrintModalConfig({
+                  isOpen: true,
+                  type: 'lesson_plan_dossier',
+                  data: plan,
+                })
+              }
             />
           )}
 
@@ -1864,6 +1956,14 @@ export default function App() {
               onAddCampus={handleAddCampus}
               onAddUser={handleAddUser}
               onUpdateSecurityPolicy={handleUpdateSecurityPolicy}
+            />
+          )}
+
+          {/* Granular Role Permissions & Access Matrix View */}
+          {activeTab === 'permissions_access' && (
+            <PermissionsAccessView
+              currentUserRole={currentUserRole}
+              onNavigate={(tab) => setActiveTab(tab)}
             />
           )}
 

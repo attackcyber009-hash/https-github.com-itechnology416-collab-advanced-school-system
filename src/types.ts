@@ -124,13 +124,17 @@ export interface FeeVoucher {
 export interface ExpenseRecord {
   id: string;
   title: string;
-  category: 'Utilities' | 'Maintenance' | 'Lab Supplies' | 'Stationery' | 'Events' | 'Staff Welfare' | 'Transport Fuel';
+  category: 'Utilities' | 'Maintenance' | 'Lab Supplies' | 'Stationery' | 'Events' | 'Staff Welfare' | 'Transport Fuel' | 'Staff Salaries';
   amount: number;
   date: string;
   paidTo: string;
   paymentMode: 'Cash' | 'Bank Transfer' | 'Cheque';
   receiptNo: string;
   notes?: string;
+  expenseTitle?: string;
+  paymentMethod?: 'Cash' | 'Bank Transfer' | 'Cheque' | 'Direct Deposit';
+  recipient?: string;
+  approvedBy?: string;
 }
 
 export interface ExamTerm {
@@ -516,7 +520,8 @@ export type ActiveNavTab =
   | 'biometric_rfid_sync'
   | 'ai_exam_grader'
   | 'live_bus_gps_tracker'
-  | 'mobile_push_engine';
+  | 'mobile_push_engine'
+  | 'permissions_access';
 
 // Phase 5 Financial Operations, Fee Engine, Payroll & POS Store Types
 export interface SalarySlip {

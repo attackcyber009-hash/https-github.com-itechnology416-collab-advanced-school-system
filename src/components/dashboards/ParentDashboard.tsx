@@ -50,6 +50,7 @@ import DashboardHeader, { GlobalFilterState } from './shared/DashboardHeader';
 import KpiCard from './shared/KpiCard';
 import ChartCard from './shared/ChartCard';
 import EmptyState from './shared/EmptyState';
+import AccessPermissionsWidget from './shared/AccessPermissionsWidget';
 
 interface ParentDashboardProps {
   students: Student[];
@@ -314,6 +315,9 @@ export default function ParentDashboard({
           onClick={() => onNavigate && onNavigate('parent_portal')}
         />
       </div>
+
+      {/* Access & Permissions Role Enforcement Card */}
+      <AccessPermissionsWidget role="parent" onNavigate={onNavigate} />
 
       {/* 3. MAIN ANALYTICS ROW (Attendance & Subject Mastery) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

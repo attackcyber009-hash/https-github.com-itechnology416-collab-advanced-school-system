@@ -60,9 +60,11 @@ import TeacherStudyMaterialsDiaries from './teacher/TeacherStudyMaterialsDiaries
 import TeacherOnlineClass from './teacher/TeacherOnlineClass';
 import TeacherAttendanceReports from './teacher/TeacherAttendanceReports';
 import TeacherNoticeBoard from './teacher/TeacherNoticeBoard';
+import BackToDashboard from '../BackToDashboard';
 
 import KpiCard from './shared/KpiCard';
 import ChartCard from './shared/ChartCard';
+import AccessPermissionsWidget from './shared/AccessPermissionsWidget';
 import DashboardHeader, { GlobalFilterState } from './shared/DashboardHeader';
 import { isDateWithinPreset } from './shared/dateFilterUtils';
 
@@ -426,6 +428,9 @@ export default function TeacherDashboard({
               onClick={() => setActiveSection('exams')}
             />
           </div>
+
+          {/* Access & Permissions Role Enforcement Card */}
+          <AccessPermissionsWidget role="teacher" onNavigate={onNavigate} className="my-2" />
 
           {/* 3. MAIN TEACHER ANALYTICS (Attendance Trend & Class Performance) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -793,6 +798,35 @@ export default function TeacherDashboard({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Sub-section Back-to-Dashboard Header when in nested section */}
+      {activeSection !== 'overview' && (
+        <BackToDashboard
+          role="teacher"
+          pageTitle={
+            activeSection === 'students'
+              ? 'Student Management & Marks Directory'
+              : activeSection === 'attendance'
+              ? 'Class Attendance Register & Roll Call'
+              : activeSection === 'exams'
+              ? 'Examination Management & Grade Book'
+              : activeSection === 'grading_policy'
+              ? 'Assessment Weightage & Grading Scheme'
+              : activeSection === 'materials_diaries'
+              ? 'Study Materials & Daily Homework Diary'
+              : activeSection === 'online_class'
+              ? 'Virtual Classroom & Live Lecture Hub'
+              : activeSection === 'attendance_reports'
+              ? 'Classroom Attendance Reports & Analytics'
+              : activeSection === 'notice_board'
+              ? 'Faculty Notice Board & Circulars'
+              : 'Teacher Academic Tool'
+          }
+          category="Faculty Workspace"
+          customAction={() => setActiveSection('overview')}
+          onNavigateDashboard={onNavigate || (() => {})}
+        />
       )}
 
       {/* VIEW SECTION: 2. STUDENT LIST */}

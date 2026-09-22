@@ -20,9 +20,11 @@ import {
   FolderOpen,
   ArrowRight,
   UploadCloud,
-  Check
+  Check,
+  Printer,
 } from 'lucide-react';
-import { StudyMaterial, ClassInfo } from '../types';
+import { StudyMaterial, ClassInfo, UserRole } from '../types';
+import { downloadFile } from '../utils/fileUtils';
 
 interface StudyMaterialsViewProps {
   materials: StudyMaterial[];
@@ -30,6 +32,7 @@ interface StudyMaterialsViewProps {
   onAddMaterial: (mat: StudyMaterial) => void;
   onDeleteMaterial: (id: string) => void;
   initialAction?: 'browse' | 'upload';
+  currentUserRole?: UserRole;
 }
 
 export default function StudyMaterialsView({
@@ -37,13 +40,19 @@ export default function StudyMaterialsView({
   classes,
   onAddMaterial,
   onDeleteMaterial,
-  initialAction = 'browse'
+  initialAction = 'browse',
+  currentUserRole = 'super_admin',
 }: StudyMaterialsViewProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'browse' | 'upload'>(initialAction);
+  const isStudentOrParent = currentUserRole === 'student' || currentUserRole === 'parent';
+  const [activeSubTab, setActiveSubTab] = useState<'browse' | 'upload'>(
+    isStudentOrParent ? 'browse' : initialAction
+  );
 
   useEffect(() => {
-    setActiveSubTab(initialAction);
-  }, [initialAction]);
+    if (!isStudentOrParent) {
+      setActiveSubTab(initialAction);
+    }
+  }, [initialAction, isStudentOrParent]);
 
   // Filters for Browse Repository
   const [searchQuery, setSearchQuery] = useState('');
@@ -232,46 +241,50 @@ export default function StudyMaterialsView({
         </div>
 
         {/* Action shortcut trigger */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('upload')}
-            className="px-3.5 py-1.5 bg-[#002147] hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-amber-400" />
-            <span>Upload Study Material</span>
-          </button>
-        </div>
+        {!isStudentOrParent && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('upload')}
+              className="px-3.5 py-1.5 bg-[#002147] hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-amber-400" />
+              <span>Upload Study Material</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Sub-Tabs Switcher */}
-      <div className="bg-white rounded-lg border border-slate-200 p-1 shadow-xs flex flex-wrap items-center gap-1 text-xs font-medium">
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('browse')}
-          className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
-            activeSubTab === 'browse'
-              ? 'bg-[#002147] text-white font-bold shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <FolderOpen className="w-4 h-4 text-amber-400" />
-          <span>Browse Repository ({materials.length})</span>
-        </button>
+      {!isStudentOrParent && (
+        <div className="bg-white rounded-lg border border-slate-200 p-1 shadow-xs flex flex-wrap items-center gap-1 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('browse')}
+            className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
+              activeSubTab === 'browse'
+                ? 'bg-[#002147] text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <FolderOpen className="w-4 h-4 text-amber-400" />
+            <span>Browse Repository ({materials.length})</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('upload')}
-          className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
-            activeSubTab === 'upload'
-              ? 'bg-[#002147] text-white font-bold shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <UploadCloud className="w-4 h-4 text-teal-400" />
-          <span>Upload Materials</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('upload')}
+            className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
+              activeSubTab === 'upload'
+                ? 'bg-[#002147] text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <UploadCloud className="w-4 h-4 text-teal-400" />
+            <span>Upload Materials</span>
+          </button>
+        </div>
+      )}
 
       {/* Inner Workspaces */}
       <AnimatePresence mode="wait">
@@ -448,33 +461,32 @@ export default function StudyMaterialsView({
                         </button>
 
                         <div className="flex items-center gap-2">
-                          <a
-                            href={mat.downloadUrl || '#'}
-                            onClick={(e) => {
-                              if (mat.downloadUrl === '#') {
-                                e.preventDefault();
-                                alert(`Simulating download stream for: "${mat.title}"`);
-                              }
-                            }}
-                            className="p-1 text-sky-800 hover:text-sky-950 hover:bg-sky-100 rounded transition"
-                            title="Download Material"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-
                           <button
                             type="button"
                             onClick={() => {
-                              if (confirm(`Are you sure you want to delete "${mat.title}"?`)) {
-                                onDeleteMaterial(mat.id);
-                                alert('Material deleted successfully from repository.');
-                              }
+                              const content = `THE EDUCATORS CAMPUS ACADEMIC REPOSITORY\n\nTitle: ${mat.title}\nSubject: ${mat.subject} | Class: ${mat.className} | Type: ${mat.fileType}\nInstructor: ${mat.teacherName} | Uploaded: ${mat.uploadDate}\n\n=========================================\nSYLLABUS & LESSON NOTES DOSSIER\n=========================================\n${mat.description || 'Comprehensive curriculum study guide, illustrative examples, and practice problem sets.'}\n\nOfficial Academic Resource - The Educators Network.`;
+                              downloadFile(content, `${mat.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}.txt`, 'text/plain;charset=utf-8');
                             }}
-                            className="p-1 text-rose-600 hover:text-rose-950 hover:bg-rose-100 rounded transition cursor-pointer"
-                            title="Delete Material"
+                            className="p-1 text-sky-800 hover:text-sky-950 hover:bg-sky-100 rounded transition cursor-pointer"
+                            title="Download Material"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Download className="w-4 h-4" />
                           </button>
+
+                          {!isStudentOrParent && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to delete "${mat.title}"?`)) {
+                                  onDeleteMaterial(mat.id);
+                                }
+                              }}
+                              className="p-1 text-rose-600 hover:text-rose-950 hover:bg-rose-100 rounded transition cursor-pointer"
+                              title="Delete Material"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -766,26 +778,25 @@ export default function StudyMaterialsView({
                 <button
                   type="button"
                   onClick={() => {
-                    alert(`Simulating document print stream for ${previewMaterial.title}`);
+                    window.print();
                   }}
-                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded"
+                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded cursor-pointer flex items-center gap-1.5"
                 >
-                  Print document
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Document</span>
                 </button>
 
-                <a
-                  href={previewMaterial.downloadUrl || '#'}
-                  onClick={(e) => {
-                    if (previewMaterial.downloadUrl === '#') {
-                      e.preventDefault();
-                      alert(`Simulating download for: "${previewMaterial.title}"`);
-                    }
+                <button
+                  type="button"
+                  onClick={() => {
+                    const content = `THE EDUCATORS CAMPUS ACADEMIC REPOSITORY\n\nTitle: ${previewMaterial.title}\nSubject: ${previewMaterial.subject} | Class: ${previewMaterial.className} | Type: ${previewMaterial.fileType}\nInstructor: ${previewMaterial.teacherName} | Uploaded: ${previewMaterial.uploadDate}\n\n=========================================\nSYLLABUS & LESSON NOTES DOSSIER\n=========================================\n${previewMaterial.description || 'Comprehensive curriculum study guide, illustrative examples, and practice problem sets.'}\n\nOfficial Academic Resource - The Educators Network.`;
+                    downloadFile(content, `${previewMaterial.title.toLowerCase().replace(/[^a-z0-9]/g, '_')}.txt`, 'text/plain;charset=utf-8');
                   }}
-                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded flex items-center gap-1"
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded flex items-center gap-1 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download Resource</span>
-                </a>
+                </button>
               </div>
             </div>
           </div>

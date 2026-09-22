@@ -40,6 +40,7 @@ export default function StudentPromotionModal({
   const [feeIncrementPct, setFeeIncrementPct] = useState(10);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [isDone, setIsDone] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -48,6 +49,7 @@ export default function StudentPromotionModal({
 
   // Toggle selection
   const handleToggleSelectAll = () => {
+    setValidationError(null);
     if (selectedStudentIds.length === classStudents.length) {
       setSelectedStudentIds([]);
     } else {
@@ -56,6 +58,7 @@ export default function StudentPromotionModal({
   };
 
   const handleToggleStudent = (id: string) => {
+    setValidationError(null);
     if (selectedStudentIds.includes(id)) {
       setSelectedStudentIds(selectedStudentIds.filter((sid) => sid !== id));
     } else {
@@ -65,9 +68,10 @@ export default function StudentPromotionModal({
 
   const handlePromote = () => {
     if (selectedStudentIds.length === 0) {
-      alert('Please select at least one student to promote.');
+      setValidationError('Please select at least one student to promote.');
       return;
     }
+    setValidationError(null);
 
     let nextRoll = rollStartSeed;
     const updated = students.map((std) => {
@@ -334,6 +338,13 @@ export default function StudentPromotionModal({
         )}
 
         {/* Footer Actions */}
+        {validationError && (
+          <div className="bg-rose-50 border-t border-rose-200 text-rose-700 px-5 py-2 text-xs font-semibold flex items-center justify-between">
+            <span>{validationError}</span>
+            <button type="button" onClick={() => setValidationError(null)} className="text-rose-500 hover:text-rose-700 font-bold">✕</button>
+          </div>
+        )}
+
         {!isDone && (
           <div className="bg-slate-100 px-5 py-3 border-t border-slate-200 flex justify-between items-center text-xs">
             <span className="text-slate-600">

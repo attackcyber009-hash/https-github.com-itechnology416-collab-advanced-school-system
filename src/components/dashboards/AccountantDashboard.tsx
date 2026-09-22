@@ -55,6 +55,7 @@ import DashboardHeader, { GlobalFilterState } from './shared/DashboardHeader';
 import KpiCard from './shared/KpiCard';
 import ChartCard from './shared/ChartCard';
 import EmptyState from './shared/EmptyState';
+import AccessPermissionsWidget from './shared/AccessPermissionsWidget';
 import { isDateWithinPreset } from './shared/dateFilterUtils';
 
 interface AccountantDashboardProps {
@@ -397,6 +398,9 @@ export default function AccountantDashboard({
           colorScheme="slate"
         />
       </div>
+
+      {/* Access & Permissions Role Enforcement Card */}
+      <AccessPermissionsWidget role="accountant" onNavigate={onNavigate} />
 
       {/* 3. MAIN FINANCIAL ANALYTICS (Revenue Trend & Income vs Expense) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

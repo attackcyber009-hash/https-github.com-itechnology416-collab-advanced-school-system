@@ -49,6 +49,7 @@ import DashboardHeader, { GlobalFilterState } from './shared/DashboardHeader';
 import KpiCard from './shared/KpiCard';
 import ChartCard from './shared/ChartCard';
 import EmptyState from './shared/EmptyState';
+import AccessPermissionsWidget from './shared/AccessPermissionsWidget';
 
 interface StudentDashboardProps {
   student?: Student;
@@ -307,6 +308,9 @@ export default function StudentDashboard({
           onClick={() => onNavigate && onNavigate('study_materials')}
         />
       </div>
+
+      {/* Access & Permissions Role Enforcement Card */}
+      <AccessPermissionsWidget role="student" onNavigate={onNavigate} />
 
       {/* 3. MAIN LEARNING ANALYTICS (Performance Trend & Subject Mastery) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

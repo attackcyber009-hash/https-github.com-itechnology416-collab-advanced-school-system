@@ -22,6 +22,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Student, FeeVoucher } from '../types';
+import { exportToCsv } from '../utils/fileUtils';
 
 interface ParentPortalViewProps {
   students: Student[];
@@ -41,6 +42,13 @@ export default function ParentPortalView({
   const [complaintText, setComplaintText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClassFilter, setSelectedClassFilter] = useState('All');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [resetSent, setResetSent] = useState<Record<string, boolean>>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newGuardianName, setNewGuardianName] = useState('');
+  const [newGuardianPhone, setNewGuardianPhone] = useState('');
+  const [newLinkedStudentId, setNewLinkedStudentId] = useState(students[0]?.id || '');
+  const [customAccounts, setCustomAccounts] = useState<Array<{ id: string; guardianName: string; studentName: string; phone: string; username: string }>>([]);
 
   useEffect(() => {
     if (initialAction) {
@@ -53,8 +61,25 @@ export default function ParentPortalView({
 
   const handleSendFeedback = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Thank you! Your feedback has been lodged directly with the Campus Head Office.');
+    setFeedbackSubmitted(true);
     setComplaintText('');
+    setTimeout(() => setFeedbackSubmitted(false), 5000);
+  };
+
+  const handleCreateParentAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    const linked = students.find((s) => s.id === newLinkedStudentId);
+    const newAcc = {
+      id: `PAR-2024-C${customAccounts.length + 10}`,
+      guardianName: newGuardianName,
+      studentName: linked ? `${linked.name} (${linked.className})` : 'Assigned Student',
+      phone: newGuardianPhone,
+      username: `parent.${newGuardianName.toLowerCase().replace(/\s+/g, '')}`,
+    };
+    setCustomAccounts((prev) => [newAcc, ...prev]);
+    setShowCreateModal(false);
+    setNewGuardianName('');
+    setNewGuardianPhone('');
   };
 
   // Mock Parent Account Requests
@@ -304,7 +329,7 @@ export default function ParentPortalView({
 
               <button
                 type="button"
-                onClick={() => alert('New Parent Account Registration Wizard opened.')}
+                onClick={() => setShowCreateModal(true)}
                 className="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
               >
                 <UserPlus className="w-3.5 h-3.5" />
@@ -326,6 +351,17 @@ export default function ParentPortalView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
+                  {customAccounts.map((acc) => (
+                    <tr key={acc.id} className="bg-purple-50/50 hover:bg-purple-50">
+                      <td className="py-2.5 px-3 font-mono font-bold text-purple-800">{acc.id}</td>
+                      <td className="py-2.5 px-3 font-bold text-slate-900">{acc.guardianName}</td>
+                      <td className="py-2.5 px-3 font-semibold text-purple-900">{acc.studentName}</td>
+                      <td className="py-2.5 px-3 font-mono text-slate-700">{acc.phone}</td>
+                      <td className="py-2.5 px-3 font-mono text-purple-700 bg-purple-100/50 rounded">{acc.username}</td>
+                      <td className="py-2.5 px-3 text-emerald-700 font-bold">Just Created</td>
+                      <td className="py-2.5 px-3 text-right font-semibold text-emerald-600">Active</td>
+                    </tr>
+                  ))}
                   {students.slice(0, 6).map((std, idx) => (
                     <tr key={std.id} className="hover:bg-slate-50">
                       <td className="py-2.5 px-3 font-mono font-bold text-slate-700">PAR-2024-0{idx + 1}</td>
@@ -343,14 +379,21 @@ export default function ParentPortalView({
                       <td className="py-2.5 px-3 text-slate-500">Today, 08:15 AM</td>
                       <td className="py-2.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => alert(`Password reset SMS sent to ${std.parentPhone} for ${std.fatherName}.`)}
-                            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded text-[11px] flex items-center gap-1 transition"
-                          >
-                            <Key className="w-3 h-3 text-amber-600" />
-                            <span>Reset Password</span>
-                          </button>
+                          {resetSent[std.id] ? (
+                            <span className="px-2 py-1 bg-emerald-100 text-emerald-800 font-bold rounded text-[11px] inline-flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              Reset Dispatched
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setResetSent((prev) => ({ ...prev, [std.id]: true }))}
+                              className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded text-[11px] flex items-center gap-1 transition cursor-pointer"
+                            >
+                              <Key className="w-3 h-3 text-amber-600" />
+                              <span>Reset Password</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -370,6 +413,13 @@ export default function ParentPortalView({
             <p className="text-slate-600">
               Inquiries, transport concerns, or academic feedback lodged directly with the Campus Head Office:
             </p>
+
+            {feedbackSubmitted && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex items-center gap-2 text-xs font-bold">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Thank you! Your feedback has been securely registered with the Campus Head Office.</span>
+              </div>
+            )}
 
             <form onSubmit={handleSendFeedback} className="space-y-2">
               <textarea
@@ -442,7 +492,6 @@ export default function ParentPortalView({
                         <button
                           type="button"
                           onClick={() => {
-                            alert(`Approved! Credentials dispatched via SMS Gateway to ${req.phone} for ${req.parentName}.`);
                             setAccountRequests((prev) => prev.filter((r) => r.id !== req.id));
                           }}
                           className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px] transition cursor-pointer"
@@ -490,7 +539,29 @@ export default function ParentPortalView({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => alert('Exporting Parent Master Directory as CSV/Excel...')}
+                onClick={() => {
+                  const filtered = students.filter((s) => {
+                    const matchesSearch =
+                      s.fatherName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      s.parentPhone.includes(searchQuery) ||
+                      s.name.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchesClass = selectedClassFilter === 'All' || s.className === selectedClassFilter;
+                    return matchesSearch && matchesClass;
+                  });
+                  const rows = filtered.map((std, idx) => ({
+                    'Parent ID': `PAR-2024-0${idx + 1}`,
+                    'Guardian Name': std.fatherName,
+                    'Student Name': std.name,
+                    'Student Code': std.studentCode,
+                    'Class': std.className,
+                    'Section': std.section,
+                    'Roll No': std.rollNo,
+                    'Primary Phone': std.parentPhone,
+                    'Portal Login': `parent.${std.studentCode.toLowerCase()}`,
+                    'Status': std.status,
+                  }));
+                  exportToCsv(rows, 'parent_master_directory');
+                }}
                 className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -582,6 +653,91 @@ export default function ParentPortalView({
                   ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Create Parent Account Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 text-xs">
+            <div className="bg-[#002147] text-white p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <UserPlus className="w-4 h-4 text-purple-400" />
+                <span>Create New Parent Portal Account</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="text-slate-300 hover:text-white font-bold cursor-pointer text-base"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateParentAccount} className="p-5 space-y-4">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Guardian / Parent Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Tariq Mahmood"
+                  value={newGuardianName}
+                  onChange={(e) => setNewGuardianName(e.target.value)}
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Mobile Contact Phone (for SMS PIN)</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. +92 300 1234567"
+                  value={newGuardianPhone}
+                  onChange={(e) => setNewGuardianPhone(e.target.value)}
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-purple-500 outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Link to Enrolled Student</label>
+                <select
+                  value={newLinkedStudentId}
+                  onChange={(e) => setNewLinkedStudentId(e.target.value)}
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white"
+                >
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.className} - Roll #{s.rollNo} - {s.studentCode})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="p-3 bg-purple-50 rounded border border-purple-100 text-[11px] text-purple-800 space-y-1">
+                <span className="font-bold block">Generated Credentials:</span>
+                <div>Username: <span className="font-mono font-bold">parent.{newGuardianName ? newGuardianName.toLowerCase().replace(/\s+/g, '') : 'name'}</span></div>
+                <div>Temporary PIN: <span className="font-mono font-bold">EDUC@2025</span> (dispatched via SMS gateway)</div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-semibold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                  <span>Provision Account</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

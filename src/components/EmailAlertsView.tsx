@@ -34,14 +34,17 @@ export default function EmailAlertsView({
   const [body, setBody] = useState('');
   const [attachments, setAttachments] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Search History
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSendEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     if (!recipientEmails.trim() || !subject.trim() || !body.trim()) {
-      alert('Please fill out recipient emails, subject, and body content.');
+      setErrorMessage('Please fill out recipient emails, subject, and body content.');
       return;
     }
 
@@ -65,7 +68,8 @@ export default function EmailAlertsView({
       setBody('');
       setAttachments('');
       setActiveSubTab('history');
-      alert('Official alert email dispatched successfully via SMTP server relay!');
+      setStatusMessage('Official alert email dispatched successfully via SMTP server relay!');
+      setTimeout(() => setStatusMessage(null), 5000);
     }, 800);
   };
 
@@ -96,6 +100,20 @@ export default function EmailAlertsView({
           </div>
         </div>
       </div>
+
+      {statusMessage && (
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>✓ {statusMessage}</span>
+          <button type="button" onClick={() => setStatusMessage(null)} className="text-emerald-600 hover:text-emerald-800 font-bold">✕</button>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>⚠️ {errorMessage}</span>
+          <button type="button" onClick={() => setErrorMessage(null)} className="text-rose-600 hover:text-rose-800 font-bold">✕</button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="bg-white rounded-lg border border-slate-200 p-1 shadow-xs flex flex-wrap items-center gap-1 text-xs font-medium">

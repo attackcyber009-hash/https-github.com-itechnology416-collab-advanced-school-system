@@ -22,7 +22,7 @@ import {
   RefreshCw,
   Info
 } from 'lucide-react';
-import { DailyDiary, Student, ClassInfo } from '../types';
+import { DailyDiary, Student, ClassInfo, UserRole } from '../types';
 
 interface DailyHomeworkDiaryViewProps {
   diaryList: DailyDiary[];
@@ -31,6 +31,7 @@ interface DailyHomeworkDiaryViewProps {
   onAddDiary: (entry: DailyDiary) => void;
   onUpdateDiary?: (updatedList: DailyDiary[]) => void;
   initialAction?: 'manage' | 'send_sms';
+  currentUserRole?: UserRole;
 }
 
 interface SMSHistoryRecord {
@@ -50,14 +51,20 @@ export default function DailyHomeworkDiaryView({
   classes,
   onAddDiary,
   onUpdateDiary,
-  initialAction = 'manage'
+  initialAction = 'manage',
+  currentUserRole = 'super_admin',
 }: DailyHomeworkDiaryViewProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'manage' | 'send_sms'>(initialAction);
+  const isStudentOrParent = currentUserRole === 'student' || currentUserRole === 'parent';
+  const [activeSubTab, setActiveSubTab] = useState<'manage' | 'send_sms'>(
+    isStudentOrParent ? 'manage' : initialAction
+  );
 
   // Sync action from sidebar
   useEffect(() => {
-    setActiveSubTab(initialAction);
-  }, [initialAction]);
+    if (!isStudentOrParent) {
+      setActiveSubTab(initialAction);
+    }
+  }, [initialAction, isStudentOrParent]);
 
   // Manage locally copies for dynamic state update (add, edit, delete)
   const [localDiaries, setLocalDiaries] = useState<DailyDiary[]>(diaryList);
@@ -104,6 +111,7 @@ export default function DailyHomeworkDiaryView({
   const [broadcastProgress, setBroadcastProgress] = useState(0);
   const [activeBroadcastStudent, setActiveBroadcastStudent] = useState<string>('');
   const [showBroadcastNotice, setShowBroadcastNotice] = useState(false);
+  const [broadcastError, setBroadcastError] = useState<string | null>(null);
 
   // Default initial SMS outbox history log
   const [smsHistory, setSmsHistory] = useState<SMSHistoryRecord[]>([
@@ -274,13 +282,14 @@ export default function DailyHomeworkDiaryView({
   // Trigger Live SMS Broadcast Simulation
   const handleTriggerBroadcast = () => {
     if (!selectedSMSDiary) {
-      alert('Please select a homework diary entry to broadcast first.');
+      setBroadcastError('Please select a homework diary entry from the list above to broadcast.');
       return;
     }
     if (filteredStudents.length === 0) {
-      alert(`There are no students in ${selectedClass} to receive this broadcast.`);
+      setBroadcastError(`There are no enrolled students in ${selectedClass} to receive this broadcast.`);
       return;
     }
+    setBroadcastError(null);
 
     setIsBroadcasting(true);
     setBroadcastProgress(0);
@@ -345,58 +354,62 @@ export default function DailyHomeworkDiaryView({
         </div>
 
         {/* Quick action triggers */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setEditingDiary(null);
-              setDiaryForm({
-                subject: 'Mathematics',
-                teacherName: 'Prof. Tariq Mahmood',
-                homeworkContent: '',
-                submissionDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-                pageNo: '',
-                estimatedMinutes: 45,
-                priority: 'Normal'
-              });
-              setShowAddModal(true);
-            }}
-            className="px-3.5 py-1.5 bg-[#002147] hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-amber-400" />
-            <span>Create Diary Entry</span>
-          </button>
-        </div>
+        {!isStudentOrParent && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEditingDiary(null);
+                setDiaryForm({
+                  subject: 'Mathematics',
+                  teacherName: 'Prof. Tariq Mahmood',
+                  homeworkContent: '',
+                  submissionDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                  pageNo: '',
+                  estimatedMinutes: 45,
+                  priority: 'Normal'
+                });
+                setShowAddModal(true);
+              }}
+              className="px-3.5 py-1.5 bg-[#002147] hover:bg-slate-900 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-amber-400" />
+              <span>Create Diary Entry</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Sub-Tabs Switcher */}
-      <div className="bg-white rounded-lg border border-slate-200 p-1 shadow-xs flex flex-wrap items-center gap-1 text-xs font-medium">
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('manage')}
-          className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
-            activeSubTab === 'manage'
-              ? 'bg-[#002147] text-white font-bold shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <BookOpen className="w-4 h-4 text-amber-400" />
-          <span>Add and Manage Diaries</span>
-        </button>
+      {!isStudentOrParent && (
+        <div className="bg-white rounded-lg border border-slate-200 p-1 shadow-xs flex flex-wrap items-center gap-1 text-xs font-medium">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('manage')}
+            className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
+              activeSubTab === 'manage'
+                ? 'bg-[#002147] text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <BookOpen className="w-4 h-4 text-amber-400" />
+            <span>Add and Manage Diaries</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('send_sms')}
-          className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
-            activeSubTab === 'send_sms'
-              ? 'bg-[#002147] text-white font-bold shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Smartphone className="w-4 h-4 text-emerald-400" />
-          <span>Send Diary via SMS</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('send_sms')}
+            className={`px-4 py-2 rounded-md transition flex items-center gap-1.5 ${
+              activeSubTab === 'send_sms'
+                ? 'bg-[#002147] text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Smartphone className="w-4 h-4 text-emerald-400" />
+            <span>Send Diary via SMS</span>
+          </button>
+        </div>
+      )}
 
       {/* Broadcast Success Notice */}
       {showBroadcastNotice && (
@@ -572,24 +585,26 @@ export default function DailyHomeworkDiaryView({
                           <span>Submission Log</span>
                         </button>
 
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(diary)}
-                            className="p-1.5 bg-slate-100 hover:bg-slate-200 border text-slate-700 rounded transition cursor-pointer"
-                            title="Edit Diary"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteDiary(diary.id)}
-                            className="p-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded transition cursor-pointer"
-                            title="Delete Diary"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {!isStudentOrParent && (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(diary)}
+                              className="p-1.5 bg-slate-100 hover:bg-slate-200 border text-slate-700 rounded transition cursor-pointer"
+                              title="Edit Diary"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteDiary(diary.id)}
+                              className="p-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded transition cursor-pointer"
+                              title="Delete Diary"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -722,6 +737,13 @@ export default function DailyHomeworkDiaryView({
                             style={{ width: `${broadcastProgress}%` }}
                           />
                         </div>
+                      </div>
+                    )}
+
+                    {broadcastError && (
+                      <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-semibold flex items-center justify-between">
+                        <span>{broadcastError}</span>
+                        <button type="button" onClick={() => setBroadcastError(null)} className="text-rose-500 hover:text-rose-700">✕</button>
                       </div>
                     )}
 

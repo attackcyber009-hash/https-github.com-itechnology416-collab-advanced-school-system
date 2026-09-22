@@ -47,6 +47,7 @@ export default function TeacherCpdLessonPlanView({
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [showAuditModal, setShowAuditModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
   // Lesson Plan Form State
   const [planForm, setPlanForm] = useState({
@@ -100,7 +101,8 @@ export default function TeacherCpdLessonPlanView({
 
     setLessonPlans([newPlan, ...lessonPlans]);
     setShowPlanModal(false);
-    alert(`Lesson Plan '${newPlan.topicTitle}' submitted for Vice Principal review!`);
+    setActionFeedback(`Lesson Plan '${newPlan.topicTitle}' submitted for Vice Principal review.`);
+    setTimeout(() => setActionFeedback(null), 4000);
   };
 
   const handleApprovePlan = (id: string) => {
@@ -156,11 +158,19 @@ export default function TeacherCpdLessonPlanView({
 
     setAudits([newAudit, ...audits]);
     setShowAuditModal(false);
-    alert(`Classroom observation audit saved. Rating: ${rating}`);
+    setActionFeedback(`Classroom observation audit saved. Rating: ${rating}`);
+    setTimeout(() => setActionFeedback(null), 4000);
   };
 
   return (
     <div id="teacher-cpd-suite" className="space-y-4">
+      {actionFeedback && (
+        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>✓ {actionFeedback}</span>
+          <button type="button" onClick={() => setActionFeedback(null)} className="text-emerald-600 hover:text-emerald-800">✕</button>
+        </div>
+      )}
+
       {/* Banner */}
       <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-[#002147] rounded-xl p-5 text-white shadow-md flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
@@ -376,7 +386,7 @@ export default function TeacherCpdLessonPlanView({
                       if (onPrintCpdCertificate) {
                         onPrintCpdCertificate(tr, 'Sir Tariq Jamil');
                       } else {
-                        alert(`Generating CPD Certificate for ${tr.moduleTitle}`);
+                        window.print();
                       }
                     }}
                     className="px-2.5 py-1.5 bg-[#002147] hover:bg-[#0b3366] text-white rounded font-bold text-[11px] flex items-center gap-1"
@@ -449,7 +459,7 @@ export default function TeacherCpdLessonPlanView({
                         if (onPrintLessonPlan) {
                           onPrintLessonPlan(plan);
                         } else {
-                          alert(`Printing Lesson Plan: ${plan.planCode}`);
+                          window.print();
                         }
                       }}
                       className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-bold flex items-center gap-1"

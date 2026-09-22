@@ -2064,6 +2064,144 @@ export default function PrintModal({ type, data, onClose }: PrintModalProps) {
             </div>
           )}
 
+          {/* ========================================================= */}
+          {/* 35. LESSON PLAN DOSSIER                                   */}
+          {/* ========================================================= */}
+          {type === 'lesson_plan_dossier' && (
+            <div className="w-full max-w-2xl bg-white p-8 rounded-xl border-2 border-slate-800 space-y-4 text-slate-900 shadow-md text-xs">
+              <div className="flex justify-between items-start border-b-2 border-slate-800 pb-3">
+                <div>
+                  <div className="text-lg font-black text-[#002147] uppercase">
+                    THE EDUCATORS (CURRICULUM DIRECTED DOSSIER)
+                  </div>
+                  <div className="text-xs font-bold text-indigo-900">
+                    SINGLE NATIONAL CURRICULUM (SNC) WEEKLY LESSON PLAN
+                  </div>
+                  <div className="text-[10px] text-slate-500">Academic Wing • Quality Education Assurance Division</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono font-bold text-slate-800 text-sm">
+                    {data?.planCode || 'LP-SNC-2024-001'}
+                  </div>
+                  <div className="text-[10px] font-bold text-emerald-700 uppercase">
+                    {data?.status || 'Approved by Principal'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Class & Section:</span>
+                  <span className="font-bold text-slate-900">{data?.className || 'Class 9'} ({data?.section || 'A'})</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Subject:</span>
+                  <span className="font-bold text-slate-900">{data?.subject || 'Physics'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Teacher Name:</span>
+                  <span className="font-bold text-slate-900">{data?.teacherName || 'Sir Tariq Jamil'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Week & Dates:</span>
+                  <span className="font-bold text-slate-900">Week {data?.weekNumber || '3'} ({data?.dateRange || 'Oct 2024'})</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="font-bold text-slate-800 uppercase text-[11px]">Topic & Learning Objectives:</div>
+                <div className="p-3 bg-indigo-50/60 rounded border border-indigo-200 font-semibold text-indigo-950">
+                  {data?.topicTitle || 'Newtonian Mechanics & Equations of Motion'}
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  {data?.objectives || 'Students will derive first and second equations of uniform acceleration and apply them to kinematic word problems.'}
+                </p>
+              </div>
+
+              <div className="border border-slate-200 rounded p-3 bg-slate-50/50 space-y-1">
+                <div className="font-bold text-slate-800 uppercase text-[10px]">Pedagogical Strategy & AV Aids:</div>
+                <p className="text-[11px] text-slate-600">
+                  {data?.pedagogy || 'Interactive multimedia whiteboard simulation, free-body diagram sketch exercise, and peer-to-peer breakout problem solving.'}
+                </p>
+              </div>
+
+              <div className="pt-6 border-t-2 border-slate-300 flex justify-between items-end text-xs">
+                <div>
+                  <div className="font-bold">{data?.teacherName || 'Teacher Signature'}</div>
+                  <div className="text-[10px] text-slate-500">Subject Specialist Educator</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold">Prof. Arshad Mahmood</div>
+                  <div className="text-[10px] text-slate-500">Campus Academic Head / Principal</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* 36. CAREER COUNSELING & PLACEMENT ROADMAP                 */}
+          {/* ========================================================= */}
+          {type === 'career_counseling_dossier' && (
+            <div className="w-full max-w-2xl bg-white p-8 rounded-xl border-2 border-emerald-900 space-y-4 text-slate-900 shadow-md text-xs">
+              <div className="flex justify-between items-start border-b-2 border-emerald-900 pb-3">
+                <div>
+                  <div className="text-lg font-black text-[#002147] uppercase">
+                    THE EDUCATORS ALUMNI &amp; CAREER GUIDANCE BUREAU
+                  </div>
+                  <div className="text-xs font-bold text-emerald-900">
+                    HIGHER EDUCATION PLACEMENT &amp; CAREER ROADMAP
+                  </div>
+                  <div className="text-[10px] text-slate-500">Bureau of Counseling • University Placement Cell</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-mono font-bold text-slate-800 text-sm">
+                    {data?.candidateId || 'CCR-2024-041'}
+                  </div>
+                  <div className="text-[10px] font-bold text-emerald-700 uppercase">
+                    Verified Dossier
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-200 grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Student Name:</span>
+                  <span className="font-bold text-slate-900">{data?.studentName || data?.name || 'Muhammad Usman'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Class & Stream:</span>
+                  <span className="font-bold text-slate-900">{data?.className || 'Class 10'} (Pre-Engineering)</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Targeted Discipline:</span>
+                  <span className="font-bold text-emerald-800">{data?.targetField || 'Computer Science & Software Systems'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold">Recommended Universities:</span>
+                  <span className="font-bold text-slate-900">{data?.institutions || 'NUST, FAST-NUCES, LUMS, GIKI'}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="font-bold text-slate-800 uppercase text-[10px]">Academic Aptitude & Psychometric Appraisal:</div>
+                <p className="text-[11px] text-slate-700 leading-relaxed bg-slate-50 p-2.5 rounded border border-slate-200">
+                  {data?.appraisal || 'Candidate demonstrates superior quantitative logic and algorithmic reasoning (98th percentile). Strongly recommended for BSc Computer Science / AI accreditation programs.'}
+                </p>
+              </div>
+
+              <div className="pt-6 border-t-2 border-slate-300 flex justify-between items-end text-xs">
+                <div>
+                  <div className="font-bold">Lead Career Counselor</div>
+                  <div className="text-[10px] text-slate-500">Student Placement Division</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold">Prof. Arshad Mahmood</div>
+                  <div className="text-[10px] text-slate-500">Chief Executive Academic Officer</div>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
